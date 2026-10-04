@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Merge Factory</title>
+<script>try{const p=JSON.parse(localStorage.getItem('mergeFactoryPreferences')||'null');if(p&&p.theme==='night')document.documentElement.dataset.theme='night';}catch(e){}</script>
+<style>
+:root{--bg:#0d1117;--panel:#151b24;--panel2:#1d2632;--text:#f5f7fb;--muted:#a9b3c1;--accent:#65e6a6;--accent2:#7aa7ff;--danger:#ff6b7d;--gold:#ffd166;--cell:#242f3d;--cell2:#2d3b4d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:radial-gradient(circle at 50% -10%,#263449 0,#0d1117 45%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr auto;max-width:1180px;margin:auto;padding:12px;gap:10px}
+.topbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.brand{font-weight:900;letter-spacing:.5px;font-size:clamp(19px,3vw,28px)}.brand span{color:var(--accent)}
+.stat{background:rgba(21,27,36,.9);border:1px solid #2a3544;border-radius:14px;padding:9px 13px;min-width:128px;text-align:right;box-shadow:0 10px 30px #0004}.stat b{display:block;font-size:18px}.stat small{color:var(--muted)}
+.main{min-height:0;display:grid;grid-template-columns:minmax(300px,1fr) 320px;gap:12px}
+.game{min-height:0;background:linear-gradient(180deg,#121923,#0f141c);border:1px solid #263243;border-radius:22px;padding:14px;display:flex;flex-direction:column;box-shadow:0 24px 70px #0007;position:relative;overflow:hidden}
+.game:before{content:"";position:absolute;inset:-100px;background:radial-gradient(circle at 20% 10%,#65e6a615,transparent 35%),radial-gradient(circle at 80% 80%,#7aa7ff14,transparent 30%);pointer-events:none}
+.factory-head{display:flex;justify-content:space-between;gap:12px;align-items:center;z-index:1}.factory-head h2{margin:0;font-size:18px}.factory-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.mult{background:#21362e;color:#91f2bf;padding:7px 10px;border-radius:999px;font-weight:800;font-size:12px;border:1px solid #315a47}
+.grid-wrap{flex:1;min-height:0;display:grid;place-items:center;padding:10px 0;z-index:1}.grid{width:min(70vh,100%);aspect-ratio:1;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:9px;background:#0a0f15;border-radius:20px;border:1px solid #293344;box-shadow:inset 0 0 0 1px #0008,inset 0 20px 40px #0005}
+.cell{position:relative;border-radius:15px;background:linear-gradient(145deg,var(--cell2),var(--cell));border:1px solid #3b4a5f;display:grid;place-items:center;overflow:hidden;user-select:none;touch-action:none;box-shadow:inset 0 1px 0 #ffffff10,0 5px 10px #0003;transition:transform .12s,border-color .12s,filter .12s}.cell:hover{border-color:#516783}.cell.selected{outline:3px solid var(--accent);transform:scale(.96)}.cell.valid{animation:pulse .7s infinite alternate}.cell.empty:after{content:"+";font-size:24px;color:#556172;font-weight:700}.cell.dragover{border-color:var(--gold);filter:brightness(1.2)}.cell.bomb-target{outline:3px solid #ff6b7d;box-shadow:0 0 22px #ff6b7d55,inset 0 1px 0 #ffffff10;animation:bombpulse .7s infinite alternate}.cell.bomb-target:hover{filter:brightness(1.2)}
+.item{width:78%;height:78%;border-radius:22%;display:grid;place-items:center;font-size:clamp(22px,5vh,46px);position:relative;box-shadow:0 9px 18px #0007,inset 0 2px 3px #ffffff35;border:2px solid #ffffff22;transform:rotate(-3deg);animation:pop .18s ease-out}.item .lvl{position:absolute;right:-5px;bottom:-5px;background:#071018;border:2px solid #ffffff20;min-width:25px;height:25px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:900}.item .rate{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);font-size:9px;font-weight:800;color:#ced7e4;white-space:nowrap;background:#0007;padding:2px 5px;border-radius:8px}
+.controls{z-index:1;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}.btn{border-radius:14px;padding:12px 10px;font-weight:900;background:#253143;border:1px solid #39495f;box-shadow:inset 0 1px #ffffff14,0 6px 13px #0004;transition:transform .08s,filter .08s}.btn:active{transform:translateY(2px)}.btn.primary{background:linear-gradient(135deg,#41c987,#239b68);border-color:#62e7aa;color:#07150f}.btn.blue{background:linear-gradient(135deg,#688ff5,#526bd0)}.btn.warn{background:linear-gradient(135deg,#ffca62,#e79836);color:#261600}.btn:disabled{filter:grayscale(.7);opacity:.55;cursor:not-allowed}
+.side{min-height:0;display:flex;flex-direction:column;gap:10px;overflow:auto;padding-right:2px}.card{background:rgba(21,27,36,.94);border:1px solid #2b3747;border-radius:18px;padding:13px;box-shadow:0 14px 35px #0004}.card h3{font-size:14px;margin:0 0 9px}.sub{color:var(--muted);font-size:12px}.upgrade{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #ffffff0c}.upgrade:first-of-type{border-top:0}.upgrade .icon{width:38px;height:38px;border-radius:11px;background:#243142;display:grid;place-items:center;font-size:20px}.upgrade .txt{flex:1}.upgrade .txt b{font-size:13px;display:block}.upgrade .txt small{font-size:11px;color:var(--muted)}.mini{padding:7px 9px;border-radius:10px;background:#2a3647;border:1px solid #42516a;font-weight:800;font-size:11px}.mini.can{background:#244f3d;border-color:#3b7f61}
+.order{background:#111821;border-radius:13px;padding:10px;border:1px solid #293547}.order-top{display:flex;justify-content:space-between;align-items:center}.bar{height:8px;background:#081018;border-radius:99px;overflow:hidden;margin-top:8px}.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0;transition:width .25s}.reward{color:var(--gold);font-weight:900}.prestige{background:linear-gradient(145deg,#211b37,#151526);border-color:#483c73}.prestige .btn{width:100%;margin-top:9px;background:linear-gradient(135deg,#9d74ff,#7052d8)}
+.consumables{display:grid;grid-template-columns:1fr 1fr;gap:8px}.consumable{background:#111821;border:1px solid #293547;border-radius:13px;padding:10px;display:flex;flex-direction:column;gap:7px;min-height:122px}.consumable-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.consumable-icon{font-size:25px}.consumable-count{background:#293547;border:1px solid #40516a;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:900}.consumable b{font-size:12px}.consumable small{color:var(--muted);font-size:10px;line-height:1.25}.consumable .mini{margin-top:auto;width:100%}.consumable .mini:disabled{opacity:.4;filter:grayscale(1)}
+.footer{display:flex;justify-content:space-between;color:#778495;font-size:11px;padding:0 6px}.toast{position:absolute;left:50%;top:72px;transform:translate(-50%,-15px);background:#0b1119e8;border:1px solid #3a4b61;padding:9px 13px;border-radius:12px;font-weight:800;opacity:0;pointer-events:none;z-index:50;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+.float{position:absolute;font-weight:900;pointer-events:none;z-index:20;animation:floatup .8s forwards;text-shadow:0 2px 6px #000}.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}.particle{position:absolute;width:7px;height:7px;border-radius:50%;animation:particle .65s forwards}
+@keyframes bombpulse{from{outline-color:#ff6b7d88}to{outline-color:#ff6b7d;box-shadow:0 0 28px #ff6b7d88,inset 0 1px 0 #ffffff10}}@keyframes pop{from{transform:scale(.45) rotate(10deg);opacity:.2}to{transform:scale(1) rotate(-3deg);opacity:1}}@keyframes pulse{from{box-shadow:inset 0 1px #ffffff10,0 0 0 #65e6a600}to{box-shadow:inset 0 1px #ffffff10,0 0 18px #65e6a655}}@keyframes floatup{to{transform:translateY(-50px);opacity:0}}@keyframes particle{to{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
+@media(max-width:1024px){html,body{overflow:auto}.main{grid-template-columns:1fr}.side{overflow:visible}.grid{width:min(92vw,560px)}#app{height:auto;min-height:100%;padding:8px}.topbar{grid-template-columns:1fr 1fr}.brand{grid-column:1/-1}.stat{text-align:center;min-width:0}.game{min-height:650px}.footer{padding-bottom:14px}}
+
+/* v1.5 */
+.topbar{grid-template-columns:1fr auto auto auto}.coin-stat b{color:var(--gold)}
+.shop-top{border-radius:14px;padding:10px 13px;font-weight:900;background:linear-gradient(135deg,#7957d9,#9d74ff);border:1px solid #a88dff;box-shadow:0 10px 30px #0004;white-space:nowrap}
+.quest-list{display:grid;gap:8px}.quest{background:#111821;border-radius:13px;padding:10px;border:1px solid #293547}.quest-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.quest-title{font-size:12px;font-weight:850;line-height:1.25}.quest-reward{font-size:10px;color:var(--gold);font-weight:900;text-align:right;white-space:nowrap}.quest-meta{margin-top:5px;color:var(--muted);font-size:10px;display:flex;justify-content:space-between}.battery-active{color:#8fffc2!important;border-color:#3d765a!important;background:#163429!important}.super-battery-active{color:#ffe7a0!important;border-color:#8b6a2f!important;background:#3a2b13!important}
+.shop-overlay{position:fixed;inset:0;background:#05080dcc;backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}.shop-overlay.open{display:flex}.shop-panel{width:min(720px,100%);max-height:min(88vh,820px);overflow:auto;background:#111821;border:1px solid #34435a;border-radius:22px;padding:16px;box-shadow:0 30px 100px #000b}.shop-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.shop-head h2{margin:0;font-size:20px}.close-shop{width:38px;height:38px;border-radius:12px;background:#263346;border:1px solid #42516a;font-size:18px}.shop-balance{background:#211d12;border:1px solid #665625;color:var(--gold);padding:9px 12px;border-radius:12px;font-weight:900;margin-bottom:12px}.shop-section{margin-top:14px}.shop-section h3{font-size:13px;margin:0 0 8px}.shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.shop-item{background:#161f2a;border:1px solid #2f3d50;border-radius:14px;padding:11px;display:flex;flex-direction:column;gap:7px;min-height:120px}.shop-item strong{font-size:12px}.shop-item small{font-size:10px;color:var(--muted);line-height:1.3}.shop-item .btn{margin-top:auto;padding:9px;font-size:11px}.shop-item.featured{background:linear-gradient(145deg,#282018,#151a24);border-color:#6d5932}.shop-note{font-size:10px;color:#8793a2;line-height:1.35;margin-top:9px}.premium{color:var(--gold)}
+@media(max-width:1024px){.topbar{grid-template-columns:1fr 1fr}.shop-top{min-height:48px}.shop-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.shop-grid{grid-template-columns:1fr}}
+.empty-consumable-overlay{position:fixed;inset:0;background:#05080d99;backdrop-filter:blur(5px);z-index:260;display:none;align-items:center;justify-content:center;padding:16px}.empty-consumable-overlay.open{display:flex}.empty-consumable-modal{width:min(390px,100%);background:#131b26;border:1px solid #3a4a61;border-radius:20px;padding:18px;box-shadow:0 28px 90px #000b;text-align:center;animation:modalpop .16s ease-out}.empty-consumable-icon{font-size:44px;line-height:1;margin-bottom:9px}.empty-consumable-modal h3{margin:0 0 7px;font-size:18px}.empty-consumable-modal p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.empty-consumable-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.empty-consumable-actions .btn{padding:11px 8px;font-size:11px}.empty-consumable-cancel{margin-top:8px;width:100%;background:transparent;border:0;color:#8996a7;padding:8px;font-weight:800}.empty-consumable-cancel:hover{color:#c9d2dd}@keyframes modalpop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+/* v2.2 automation pricing */
+.automation-list{display:grid;gap:8px}.auto-row{background:#111821;border:1px solid #293547;border-radius:13px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.auto-row.locked{opacity:.55}.auto-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:900}.auto-desc{grid-column:1/-1;color:var(--muted);font-size:10px;line-height:1.3}.auto-toggle{min-width:58px;padding:7px 9px;border-radius:10px;background:#2a3647;border:1px solid #42516a;font-size:10px;font-weight:900}.auto-toggle.on{background:#244f3d;border-color:#3b7f61;color:#9bffd0}.auto-toggle.locked{background:#242b35;color:#778292;cursor:not-allowed}.auto-advanced{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.auto-setting{background:#0d141d;border:1px solid #263446;border-radius:11px;padding:8px}.auto-setting label{display:block;color:var(--muted);font-size:9px;margin-bottom:5px}.auto-setting select{width:100%;background:#1d2938;color:var(--text);border:1px solid #3a4b62;border-radius:8px;padding:6px;font:inherit;font-size:10px}.auto-setting.disabled{opacity:.45;pointer-events:none}.auto-next{margin-top:8px;background:#151d29;border:1px dashed #3a4960;border-radius:11px;padding:8px;color:#aeb9c8;font-size:10px}.quest-claim{margin-top:8px;width:100%;padding:7px 9px;border-radius:9px;background:linear-gradient(135deg,#41c987,#239b68);color:#07150f;font-size:10px;font-weight:900}.quest-claim:disabled{opacity:.45;filter:grayscale(1)}
+
+
+/* v2.3 · Mobile-first navigation */
+.mobile-nav{display:none}
+.mobile-panel-card{display:block}
+@media(max-width:1024px){
+  html,body{background:#0b1017;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain}
+  body{padding-bottom:82px}
+  #app{display:block;min-height:100%;padding:8px 8px 18px;max-width:720px}
+  .topbar{position:sticky;top:0;z-index:80;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:6px 0 8px;background:linear-gradient(180deg,#0b1017 76%,#0b101700);backdrop-filter:blur(12px)}
+  .brand{grid-column:1/-1;display:flex;justify-content:center;align-items:center;font-size:16px;line-height:1;padding:3px 0 2px}
+  .stat{min-width:0;padding:7px 4px;border-radius:11px;box-shadow:none;background:#141c27}
+  .stat small{font-size:8px;letter-spacing:.04em}
+  .stat b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shop-top{display:none}
+  .main{display:block;min-height:0}
+  .game{min-height:0;padding:10px;border-radius:18px;box-shadow:none;overflow:visible}
+  .factory-head{align-items:flex-start;margin-bottom:4px}
+  .factory-head h2{font-size:16px}.factory-head p{font-size:10px;max-width:230px}.mult{font-size:11px;padding:6px 8px}
+  .grid-wrap{display:block;padding:7px 0}
+  .grid{width:100%;max-width:none;aspect-ratio:1;gap:5px;padding:6px;border-radius:15px}
+  .cell{border-radius:11px;min-width:0;min-height:0}
+  .item{width:80%;height:80%;font-size:clamp(20px,10vw,39px);border-radius:20%}
+  .item .lvl{right:-4px;bottom:-4px;min-width:21px;height:21px;font-size:9px}
+  .item .rate{bottom:-14px;font-size:7px;padding:1px 3px}
+  .controls{grid-template-columns:1.2fr 1fr .8fr;gap:6px;position:sticky;bottom:76px;z-index:45;padding:6px 0;background:linear-gradient(180deg,#0f141c00,#0f141cee 25%)}
+  .controls .btn{min-height:48px;padding:9px 6px;border-radius:12px;font-size:12px;box-shadow:0 5px 12px #0007}
+  .side{display:block;overflow:visible;padding:8px 0 0}
+  .card{border-radius:15px;padding:11px;margin-bottom:8px;box-shadow:none}
+  .mobile-panel-card{display:none}
+  body[data-mobile-tab="factory"] .mobile-panel-card{display:none}
+  body[data-mobile-tab="factory"] .mobile-factory-extra{display:block}
+  body[data-mobile-tab="factory"] #coreTreeCard,body[data-mobile-tab="factory"] #researchCard,body[data-mobile-tab="factory"] #prestigeCard{display:none}
+  body[data-mobile-tab="upgrades"] .game,body[data-mobile-tab="upgrades"] .mobile-factory-extra{display:none}
+  body[data-mobile-tab="upgrades"] #upgradesCard,body[data-mobile-tab="upgrades"] #coreTreeCard,body[data-mobile-tab="upgrades"] #researchCard,body[data-mobile-tab="upgrades"] #prestigeCard{display:block}
+  body[data-mobile-tab="automation"] .game,body[data-mobile-tab="automation"] .mobile-factory-extra{display:none}
+  body[data-mobile-tab="automation"] #automationCard{display:block}
+  body[data-mobile-tab="orders"] .game,body[data-mobile-tab="orders"] .mobile-factory-extra{display:none}
+  body[data-mobile-tab="orders"] #questsCard{display:block}
+  .consumables{grid-template-columns:1fr 1fr;gap:7px}
+  .consumable{min-height:118px;padding:9px}
+  .upgrade{padding:9px 0}.upgrade .icon{width:36px;height:36px}.mini{min-height:38px}
+  .automation-list{gap:7px}.auto-row{padding:11px}.auto-toggle{min-width:72px;min-height:40px}
+  .auto-advanced{grid-template-columns:1fr;gap:7px}.auto-setting select{min-height:42px;font-size:13px}
+  .quest{padding:11px}.quest-claim{min-height:42px}
+  .footer{display:none}
+  .mobile-nav{position:fixed;z-index:120;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding:7px max(8px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:#101722ee;border-top:1px solid #2a3748;backdrop-filter:blur(16px);box-shadow:0 -10px 30px #0008}
+  .mobile-nav-btn{position:relative;min-height:55px;border-radius:12px;background:transparent;color:#8592a3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:18px}
+  .mobile-nav-btn b{font-size:8.5px;font-weight:800;white-space:nowrap}.mobile-nav-btn[data-tab="factory"] span{font-size:21px}.mobile-nav-btn[data-tab="factory"].active{transform:translateY(-2px)}
+  .mobile-nav-btn.active{background:#203044;color:#f5f7fb}.mobile-nav-btn.active span{transform:translateY(-1px)}
+  .mobile-nav-btn i{position:absolute;top:5px;right:21%;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#ff6b7d;color:white;font-size:9px;font-style:normal;font-weight:900;display:grid;place-items:center}
+  .shop-overlay,.empty-consumable-overlay{align-items:flex-end;padding:0}
+  .shop-panel{width:100%;max-height:92%;border-radius:22px 22px 0 0;padding:14px 10px calc(18px + env(safe-area-inset-bottom));border-bottom:0}
+  .shop-head{position:sticky;top:-14px;z-index:3;background:#111821;padding:12px 3px 8px;margin:-12px -2px 10px}
+  .shop-grid{grid-template-columns:1fr 1fr;gap:7px}.shop-item{min-height:125px;padding:10px}.shop-item .btn{min-height:42px}
+  .empty-consumable-modal{width:100%;border-radius:22px 22px 0 0;margin:0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+}
+@media(max-width:390px){
+  .controls .btn{font-size:10px}.consumables{grid-template-columns:1fr}.shop-grid{grid-template-columns:1fr 1fr}.factory-head p{max-width:190px}
+}
+@media(min-width:1025px){body[data-mobile-tab] .mobile-panel-card{display:block!important}}
+
+
+
+/* v2.4 · 2048-inspired visual redesign */
+:root{
+  --bg:#faf8ef;--panel:#f4efe6;--panel2:#eee7dc;--text:#5f574f;--muted:#8f857a;
+  --accent:#8f7a66;--accent2:#a88b70;--danger:#d85b55;--gold:#d9a441;
+  --cell:#cdc1b4;--cell2:#cdc1b4;
+}
+html,body{background:#faf8ef;color:var(--text);font-family:Arial,"Helvetica Neue",sans-serif}
+#app{max-width:1060px}
+.topbar{align-items:stretch}
+.brand{color:#776e65;font-size:clamp(24px,4vw,42px);letter-spacing:-1.5px;line-height:.95;align-self:center}.brand span{color:#776e65}
+.stat{background:#bbada0;border:0;border-radius:7px;color:#f9f6f2;box-shadow:none;padding:8px 13px;min-width:112px;text-align:center}
+.stat small{color:#eee4da;font-size:10px;font-weight:800;letter-spacing:.06em}.stat b{font-size:19px;line-height:1.15}
+.coin-stat b{color:#fff2ba}
+.shop-top{background:#8f7a66;border:0;border-radius:7px;box-shadow:none;color:white}
+.main{gap:16px}.game{background:transparent;border:0;box-shadow:none;border-radius:0;padding:0;overflow:visible}.game:before{display:none}
+.factory-head{margin:4px 0 10px}.factory-head h2{font-size:18px;color:#776e65}.factory-head p{color:#9b9187}.mult{background:#bbada0;color:#fff;border:0;border-radius:7px;padding:8px 11px}
+.grid-wrap{padding:0}.grid{width:min(68vh,100%);gap:9px;padding:9px;background:#bbada0;border:0;border-radius:9px;box-shadow:none;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr))}
+.cell{background:#cdc1b4;border:0;border-radius:7px;box-shadow:none;transition:transform .08s,filter .08s;width:100%;height:100%;min-width:0;min-height:0}.cell:hover{border-color:transparent;filter:brightness(1.03)}.cell.empty:after{content:""}.cell.selected{outline:4px solid #8f7a66;outline-offset:-4px;transform:scale(.96)}
+.cell.valid{animation:none;box-shadow:inset 0 0 0 4px #f2b179}.cell.dragover{filter:brightness(1.08);box-shadow:inset 0 0 0 4px #f2b179}.cell.bomb-target{outline:4px solid #d85b55;outline-offset:-4px;box-shadow:none;animation:none}
+.item{width:100%;height:100%;border-radius:7px;border:0;box-shadow:none;transform:none;animation:pop2048 .13s ease-out;display:grid;grid-template-rows:1fr auto;place-items:center;padding:5px;position:relative}
+.item .machine-icon{font-size:clamp(24px,5.6vh,48px);filter:saturate(.9)}
+.item .lvl{position:absolute;top:5px;left:6px;right:auto;bottom:auto;min-width:0;height:auto;background:transparent;border:0;border-radius:0;color:inherit;font-size:10px;opacity:.78}
+.item .rate{position:static;transform:none;background:transparent;color:inherit;opacity:.82;padding:0;font-size:8px;line-height:1;font-weight:900;align-self:end}
+.controls{margin-top:11px;gap:8px}.btn{background:#8f7a66;color:#fff;border:0;border-radius:7px;box-shadow:none;padding:12px 10px}.btn.primary{background:#8f7a66;color:#fff;border:0}.btn.blue{background:#6f89a8}.btn.warn{background:#d9a441;color:#fff}.btn:active{transform:scale(.98)}
+.side{gap:12px}.card{background:#f1ede6;border:0;border-radius:10px;box-shadow:none;color:#5f574f}.card h3{color:#776e65}.sub{color:#8e8479}
+.upgrade{border-top-color:#ded7cf}.upgrade .icon{background:#ddd4ca;border-radius:7px}.mini{background:#8f7a66;border:0;border-radius:7px;color:#fff}.mini.can{background:#6f8b70;border:0}
+.order,.quest,.consumable,.auto-row,.auto-setting,.auto-next{background:#e8e1d8;border:0}.bar{background:#d4cbc2}.bar>i{background:#f2b179}.reward,.quest-reward{color:#a7771c}.prestige{background:#e7def4;border:0}.prestige .btn{background:#8069a8}
+.consumable-count{background:#d7cec5;border:0;color:#5f574f}.auto-toggle{background:#cfc6bc;border:0;color:#5f574f}.auto-toggle.on{background:#7d9d7f;color:white;border:0}.auto-toggle.locked{background:#ddd7d0;color:#aaa095}
+.shop-overlay,.empty-consumable-overlay{background:#776e6577;backdrop-filter:blur(3px)}.shop-panel,.empty-consumable-modal{background:#faf8ef;border:0;box-shadow:0 18px 60px #5f574f44}.shop-balance{background:#eee4da;border:0;color:#8b6a20}.shop-item{background:#eee9e1;border:0}.shop-item.featured{background:#f7edd3;border:2px solid #d9a441;color:#5f574f}.shop-item.featured small{color:#887a67}.shop-note{color:#8f857a}
+.footer{color:#a39a90}
+.toast{background:#776e65;color:#fff;border:0;border-radius:7px}
+@keyframes pop2048{0%{transform:scale(.72);opacity:.45}100%{transform:scale(1);opacity:1}}
+
+@media(max-width:1024px){
+  html,body{background:#faf8ef}
+  body{padding-bottom:72px}
+  #app{padding:8px 10px 14px}
+  .topbar{position:relative;top:auto;background:transparent;backdrop-filter:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:3px 0 10px}
+  .brand{grid-column:1/-1;justify-content:flex-start;font-size:34px;padding:4px 1px 2px}
+  .stat{background:#bbada0;border-radius:7px;padding:7px 3px}.stat small{font-size:8px}.stat b{font-size:15px}
+  .game{padding:0;background:transparent;border-radius:0}
+  .factory-head{margin:0 1px 8px}.factory-head h2{font-size:17px}.factory-head p{font-size:10px}.mult{font-size:11px;border-radius:6px}
+  .grid{gap:6px;padding:6px;border-radius:8px;background:#bbada0}
+  .cell{border-radius:6px}
+  .item{border-radius:6px;padding:4px}.item .machine-icon{font-size:clamp(23px,9vw,40px)}.item .lvl{font-size:8px;top:4px;left:5px}.item .rate{font-size:7px}
+  .controls{position:static;background:transparent;padding:0;margin-top:8px;bottom:auto}.controls .btn{border-radius:7px;box-shadow:none;min-height:46px}
+  .side{padding-top:10px}.card{border-radius:9px;background:#f1ede6}.consumable,.auto-row,.quest{border-radius:8px}
+  .mobile-nav{padding:5px max(7px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));background:#f6f1e9f2;border-top:1px solid #ded6cc;box-shadow:0 -5px 18px #776e6522;backdrop-filter:blur(12px)}
+  .mobile-nav-btn{min-height:51px;border-radius:7px;color:#9a8e82;font-size:17px}.mobile-nav-btn b{font-size:8.5px}.mobile-nav-btn.active{background:#bbada0;color:#fff}.mobile-nav-btn i{background:#d85b55}
+  .shop-panel{background:#faf8ef;border-radius:16px 16px 0 0}.shop-head{background:#faf8ef}.close-shop{background:#ddd4ca;border:0;color:#5f574f}
+  .empty-consumable-modal{background:#faf8ef;border-radius:16px 16px 0 0}
+}
+
+
+/* v2.6 · stable board + settings + master volume */
+.settings-top{min-width:44px;min-height:44px;padding:0 12px;border-radius:7px;background:#8f7a66;color:#fff;font-size:20px;font-weight:900}
+.settings-overlay{position:fixed;inset:0;background:#776e6577;backdrop-filter:blur(3px);z-index:240;display:none;align-items:center;justify-content:center;padding:16px}
+.settings-overlay.open{display:flex}
+.settings-panel{width:min(430px,100%);background:#faf8ef;color:#5f574f;border-radius:14px;padding:16px;box-shadow:0 18px 60px #5f574f44}
+.settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.settings-head h2{margin:0;font-size:20px;color:#776e65}
+.settings-close{width:40px;height:40px;border-radius:7px;background:#ddd4ca;color:#5f574f;font-size:18px}
+.setting-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #e1d9d0}.setting-row:first-of-type{border-top:0}
+.setting-copy{flex:1;min-width:0}.setting-copy b{display:block;font-size:14px}.setting-copy small{display:block;color:#8f857a;font-size:11px;margin-top:3px;line-height:1.35}
+.switch{position:relative;width:54px;height:32px;flex:0 0 auto}.switch input{position:absolute;opacity:0;pointer-events:none}.switch span{position:absolute;inset:0;border-radius:999px;background:#c9c0b7;transition:.18s}.switch span:after{content:"";position:absolute;width:24px;height:24px;left:4px;top:4px;border-radius:50%;background:#fff;box-shadow:0 2px 6px #0002;transition:.18s}.switch input:checked+span{background:#8f7a66}.switch input:checked+span:after{transform:translateX(22px)}.switch input:focus-visible+span{outline:3px solid #f2b179;outline-offset:2px}
+.setting-value{font-size:11px;font-weight:900;color:#8f7a66;min-width:52px;text-align:right}
+.volume-control{display:flex;align-items:center;gap:10px;min-width:170px}
+.volume-icon{width:26px;text-align:center;font-size:18px;flex:0 0 auto}
+.volume-slider{width:120px;accent-color:#8f7a66;cursor:pointer}
+.volume-slider:focus-visible{outline:3px solid #f2b179;outline-offset:3px;border-radius:8px}
+@media(max-width:420px){.setting-row.volume-row{align-items:flex-start;flex-wrap:wrap}.volume-row .setting-copy{flex-basis:100%}.volume-control{width:100%;min-width:0}.volume-slider{flex:1;width:auto}.volume-row .setting-value{min-width:42px}}
+
+html[data-theme="night"],html[data-theme="night"] body{background:#141210;color:#eee7df}
+html[data-theme="night"] .brand,html[data-theme="night"] .brand span{color:#eee7df}
+html[data-theme="night"] .stat{background:#3b342f;color:#f5eee7}html[data-theme="night"] .stat small{color:#bfb3a8}
+html[data-theme="night"] .shop-top,html[data-theme="night"] .settings-top,html[data-theme="night"] .btn.primary,html[data-theme="night"] .mini{background:#625449;color:#fff}
+html[data-theme="night"] .factory-head h2,html[data-theme="night"] .card h3{color:#e9dfd5}html[data-theme="night"] .factory-head p,html[data-theme="night"] .sub{color:#aa9e93}
+html[data-theme="night"] .mult{background:#4d433b;color:#fff}
+html[data-theme="night"] .grid{background:#4a423c}
+html[data-theme="night"] .cell{background:#302b27}
+html[data-theme="night"] .card,html[data-theme="night"] .order,html[data-theme="night"] .quest,html[data-theme="night"] .consumable,html[data-theme="night"] .auto-row,html[data-theme="night"] .auto-setting,html[data-theme="night"] .auto-next{background:#211e1b;color:#eee7df}
+html[data-theme="night"] .upgrade{border-top-color:#39332e}html[data-theme="night"] .upgrade .icon{background:#332e2a}
+html[data-theme="night"] .consumable-count{background:#39332e;color:#e9dfd5}html[data-theme="night"] .bar{background:#342f2b}
+html[data-theme="night"] .prestige{background:#282233}
+html[data-theme="night"] .footer{color:#81776f}
+html[data-theme="night"] .mobile-nav{background:#191613f2;border-top-color:#332d28;box-shadow:0 -5px 18px #0005}
+html[data-theme="night"] .mobile-nav-btn{color:#8f857c}html[data-theme="night"] .mobile-nav-btn.active{background:#4b423b;color:#fff}
+html[data-theme="night"] .shop-panel,html[data-theme="night"] .empty-consumable-modal,html[data-theme="night"] .settings-panel{background:#1c1917;color:#eee7df;box-shadow:0 18px 60px #0008}
+html[data-theme="night"] .shop-head,html[data-theme="night"] .settings-head{background:#1c1917}html[data-theme="night"] .shop-head h2,html[data-theme="night"] .settings-head h2{color:#eee7df}
+html[data-theme="night"] .close-shop,html[data-theme="night"] .settings-close{background:#37312d;color:#eee7df}
+html[data-theme="night"] .shop-balance{background:#332d21;color:#e4c66f}html[data-theme="night"] .shop-item{background:#28231f;color:#eee7df}html[data-theme="night"] .shop-item.featured{background:#342b20;border-color:#8a6e2d;color:#eee7df}html[data-theme="night"] .shop-item.featured small{color:#b7aa9d}
+html[data-theme="night"] .setting-row{border-top-color:#332e2a}html[data-theme="night"] .setting-copy small{color:#9e9389}html[data-theme="night"] .setting-value{color:#d1c2b4}
+html[data-theme="night"] .volume-slider{accent-color:#d6b98d}
+html[data-theme="night"] .switch span{background:#4a423b}html[data-theme="night"] .switch input:checked+span{background:#8f7a66}
+html[data-theme="night"] .toast{background:#e8ded5;color:#241f1b}
+@media(min-width:1025px){.topbar{grid-template-columns:1fr auto auto auto auto auto}}
+@media(max-width:1024px){.settings-top{position:absolute;right:0;top:4px;width:42px;min-width:42px;height:42px;min-height:42px;padding:0;z-index:3}.settings-overlay{align-items:flex-end;padding:0}.settings-panel{width:100%;border-radius:16px 16px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom))}html[data-theme="night"] .settings-panel{background:#1c1917}.brand{padding-right:48px}}
+
+
+/* v3.0 visuals */
+.collection-summary{display:flex;align-items:center;justify-content:space-between;gap:10px}.collection-summary b{font-size:22px}.collection-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-top:12px}.collection-card{border-radius:14px;padding:10px;background:#f7f1e6;border:1px solid #dac9ac;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;min-height:94px;text-align:center}.collection-card .collection-tile{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:inset 0 1px 0 #fff9}.collection-card .collection-svg{width:34px;height:34px;display:block}.collection-card .abbr{font-size:16px;letter-spacing:.3px}.collection-card .name{font-size:11px;font-weight:800;line-height:1.05;color:#5f574f}.collection-card.locked{background:#ede3d1;border-style:dashed}.collection-card.locked .collection-tile{background:#d0c1ab!important;color:#8e8377!important}.collection-card.locked .name{color:#9a8f84}.collection-overlay,.tutorial-overlay,.reward-overlay{position:fixed;inset:0;background:#0008;backdrop-filter:blur(8px);display:none;z-index:260;align-items:center;justify-content:center;padding:16px}.collection-overlay.open,.tutorial-overlay.open,.reward-overlay.open{display:flex}.collection-panel,.tutorial-panel,.reward-panel{width:min(760px,100%);max-height:min(88vh,860px);overflow:auto;background:#faf8ef;color:#6f665f;border-radius:24px;border:1px solid #d8c8ab;padding:16px;box-shadow:0 26px 90px #0005}.collection-topline{display:flex;align-items:baseline;gap:8px;margin-top:10px}.collection-topline b{font-size:28px}.tutorial-panel,.reward-panel{max-width:520px;text-align:center}.tutorial-step-pill{display:inline-block;background:#ece2cd;color:#7c6f60;border-radius:999px;padding:6px 12px;font-weight:900;font-size:12px}.tutorial-panel h2,.reward-panel h2{margin:14px 0 8px;color:#776e65}.tutorial-panel p{color:#8a7f73;line-height:1.4}.tutorial-art{margin:16px auto 20px;min-height:108px;border-radius:20px;background:#f3ead7;border:1px solid #e0d2b8;display:grid;place-items:center;font-weight:900;font-size:30px;color:#776e65;padding:18px}.tutorial-actions{display:flex;gap:10px;justify-content:center;margin-top:12px}.daily-streak{display:inline-block;background:#f0e3bd;color:#7b5f1f;border-radius:999px;padding:7px 12px;font-weight:900;font-size:13px;margin-top:6px}.daily-reward-card{margin:16px 0 14px;padding:18px;border-radius:20px;background:#f3ead7;border:1px solid #e0d2b8}.daily-reward-icon{font-size:42px;margin-bottom:8px;min-height:52px;display:grid;place-items:center}.daily-reward-icon .coin-svg{width:48px!important;height:48px!important}.daily-reward-name{font-weight:900;font-size:24px;color:#776e65}.offline-gain{font-size:34px;font-weight:900;color:#f59563;margin:18px 0 10px}.item{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;border-radius:18px;padding:4px 4px 8px;transform:none!important;animation:pop .18s ease-out}.item.merge-hit{animation:mergepop .28s ease-out}.item.buy-hit{animation:buypop .22s ease-out}.item .machine-icon{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding-top:2px;gap:2px}.item .machine-svg-wrap{width:clamp(22px,6vw,38px);height:clamp(22px,6vw,38px);display:grid;place-items:center}.item .machine-svg{width:100%;height:100%;display:block;filter:drop-shadow(0 1px 0 rgba(255,255,255,.25))}.item .machine-name{font-size:clamp(7px,1.7vw,10px);line-height:1.05;font-weight:900;text-align:center;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.item .rate{bottom:2px;left:50%;transform:translateX(-50%);font-size:8px;padding:1px 4px;border-radius:7px}.item .lvl{right:4px;bottom:auto;top:4px;min-width:22px;height:22px}.cell.unlock-glow{animation:unlockglow .65s ease-out}.stat.bump b{animation:bump .25s ease-out}.mobile-factory-extra .mini{min-width:74px}.collection-summary .mini{padding:10px 12px}@keyframes mergepop{0%{transform:scale(.7)}50%{transform:scale(1.12)}100%{transform:scale(1)}}@keyframes buypop{0%{transform:scale(.4);opacity:.2}100%{transform:scale(1);opacity:1}}@keyframes unlockglow{0%{box-shadow:0 0 0 transparent}45%{box-shadow:0 0 0 4px #edc22e99,0 0 24px #edc22e77}100%{box-shadow:0 0 0 transparent}}@keyframes bump{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}.coin-inline{display:inline-flex;align-items:center;gap:6px}.coin-svg{width:18px;height:18px;vertical-align:middle;display:inline-block}.coin-svg.large{width:20px;height:20px}.coin-svg.big{width:22px;height:22px}.item .machine-emoji{font-size:clamp(24px,7vw,40px);line-height:1;filter:drop-shadow(0 1px 0 rgba(255,255,255,.25))}.collection-card .emoji-big{font-size:34px;line-height:1;display:block}.machine-svg-wrap{display:none}html[data-theme="night"] .collection-panel,html[data-theme="night"] .tutorial-panel,html[data-theme="night"] .reward-panel{background:#1d1915;color:#eee7df;border-color:#3c342b}html[data-theme="night"] .collection-card{background:#2a241f;border-color:#3c342b}html[data-theme="night"] .collection-card .name{color:#d9cab9}html[data-theme="night"] .collection-card.locked{background:#211c19}html[data-theme="night"] .tutorial-art,html[data-theme="night"] .daily-reward-card{background:#2a241f;border-color:#3c342b;color:#efe4d8}html[data-theme="night"] .daily-streak{background:#4e4022;color:#f2d48a}html[data-theme="night"] .tutorial-step-pill{background:#342c24;color:#e7dacb}html[data-theme="night"] .daily-reward-name,html[data-theme="night"] .collection-topline b,html[data-theme="night"] .tutorial-panel h2,html[data-theme="night"] .reward-panel h2{color:#f4ede7}
+
+
+.daily-missions-box{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.daily-missions-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.daily-streak-chip{background:#f0e3bd;color:#7b5f1f;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900}.daily-mission-list{margin-top:10px}.daily-mission-grand{margin-top:10px;padding:10px 12px;border-radius:14px;background:#f7f1e6;border:1px solid #dac9ac;font-size:12px;font-weight:700;color:#6f665f}.quest.daily.complete{border-color:#e6b800;background:#fff8df}.quest.daily .quest-title{display:flex;align-items:center;gap:8px}html[data-theme="night"] .daily-streak-chip{background:#4e4022;color:#f2d48a}html[data-theme="night"] .daily-mission-grand{background:#2a241f;border-color:#3c342b;color:#e7dacb}html[data-theme="night"] .quest.daily.complete{background:#40351d;border-color:#8c7129;color:#eee7df}
+
+
+/* v4.5 · visual fixes and retention */
+.collection-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));align-items:stretch}.era-header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 12px;border-radius:14px;background:#eee5d7;border:1px solid #dbcdb8;font-weight:900;color:#6d6258}.era-header:first-child{margin-top:0}.era-header small{font-size:10px;color:#96897c}.collection-card{min-height:82px;padding:8px}.collection-card .collection-tile{width:48px;height:48px}.collection-card .emoji-big{font-size:30px}.collection-milestones{display:grid;gap:8px;margin:12px 0 14px}.milestone-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:14px;background:#f4ecdf;border:1px solid #dfd0ba}.milestone-row.ready{border-color:#d3a62b;background:#fff4cc}.milestone-row.claimed{opacity:.65}.milestone-level{font-weight:1000;font-size:13px;background:#776e65;color:white;padding:6px 8px;border-radius:9px}.milestone-copy b{display:block;font-size:12px}.milestone-copy small{display:block;color:#8f8377;font-size:10px;margin-top:2px}.milestone-row button{padding:7px 9px}.era-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px}.era-dot{width:10px;height:10px;border-radius:50%;display:inline-block}.item.era-capstone{box-shadow:inset 0 0 0 3px #fff7,0 0 18px #ffd16666}.collection-card.capstone{box-shadow:inset 0 0 0 2px #d3a62b66}html[data-theme="night"] .era-header{background:#2b2520;border-color:#443a32;color:#eee7df}html[data-theme="night"] .era-header small{color:#9f9489}html[data-theme="night"] .milestone-row{background:#28221d;border-color:#40362e}html[data-theme="night"] .milestone-row.ready{background:#493c1b;border-color:#9b7c28}html[data-theme="night"] .milestone-copy small{color:#aa9d91}
+
+
+/* v4.1 retention */
+.streak-track{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;margin:10px 0 6px}.streak-day{aspect-ratio:1;border-radius:8px;background:#e7ded0;border:1px solid #d6c8b4;display:grid;place-items:center;font-size:10px;font-weight:900;color:#8a7c6d}.streak-day.done{background:#f1cf67;border-color:#d6a92c;color:#674d0d}.streak-day.next{box-shadow:0 0 0 2px #f2b179 inset;background:#fff5e8}.streak-day.grand{font-size:13px}.achievement-list{display:grid;gap:8px;margin-top:10px}.achievement-row{display:grid;grid-template-columns:38px 1fr auto;gap:9px;align-items:center;padding:9px;border-radius:13px;background:#eee7dc}.achievement-row.ready{background:#fff4cc;box-shadow:inset 0 0 0 1px #d3a62b}.achievement-row.claimed{opacity:.62}.achievement-icon{font-size:22px;text-align:center}.achievement-copy b{display:block;font-size:12px}.achievement-copy small{display:block;font-size:10px;color:#8b7f73;margin-top:2px}.achievement-row .mini{padding:7px 8px}.era-overlay,.prestige-overlay{position:fixed;inset:0;background:#0009;backdrop-filter:blur(8px);display:none;z-index:310;align-items:center;justify-content:center;padding:16px}.era-overlay.open,.prestige-overlay.open{display:flex}.era-panel,.prestige-panel{width:min(500px,100%);background:#faf8ef;color:#6f665f;border-radius:24px;border:1px solid #d8c8ab;padding:18px;box-shadow:0 28px 90px #0006;text-align:center}.era-icon{font-size:58px;line-height:1;margin:8px 0}.era-title{font-size:28px;font-weight:1000;margin:4px 0}.era-reward{margin:14px 0;padding:12px;border-radius:15px;background:#f3ead7;border:1px solid #e0d2b8;font-weight:900}.prestige-compare{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:14px 0}.prestige-mult{padding:14px;border-radius:16px;background:#eee5f8}.prestige-mult b{font-size:24px;display:block}.prestige-arrow{font-size:24px;font-weight:1000}.prestige-keep{text-align:left;background:#f4ecdf;border-radius:14px;padding:12px;font-size:12px;line-height:1.5}.danger-zone{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.btn.danger{background:#b84b4b;color:white}.balance-note{margin-top:8px;padding:8px 10px;border-radius:12px;background:#f3ead7;font-size:10px;line-height:1.35}.era-current{margin-top:8px;font-size:11px;font-weight:900}.stat-detail{opacity:.84}.achievement-summary{display:flex;align-items:center;justify-content:space-between;gap:10px}.achievement-summary b{font-size:20px}
+html[data-theme="night"] .streak-day{background:#29231e;border-color:#40372f;color:#9f9387}html[data-theme="night"] .streak-day.done{background:#594819;border-color:#9d7c25;color:#f2d48a}html[data-theme="night"] .streak-day.next{background:#352a20}.achievement-row{ }html[data-theme="night"] .achievement-row{background:#2a241f}html[data-theme="night"] .achievement-row.ready{background:#493c1b}html[data-theme="night"] .achievement-copy small{color:#a99b8e}html[data-theme="night"] .era-panel,html[data-theme="night"] .prestige-panel{background:#1d1915;color:#eee7df;border-color:#3c342b}html[data-theme="night"] .era-reward,html[data-theme="night"] .prestige-keep,html[data-theme="night"] .balance-note{background:#2a241f;border-color:#3c342b}html[data-theme="night"] .prestige-mult{background:#30283a}
+
+
+/* v4.5 visual fixes */
+html:not([data-theme="night"]) .shop-item.featured{background:#f7edd3!important;color:#5f574f!important;border-color:#d9a441!important}
+html:not([data-theme="night"]) .shop-item.featured small{color:#887a67!important}
+html[data-theme="night"] .daily-reward-card{background:#29231e!important;border-color:#443a31!important;color:#eee7df!important}
+html[data-theme="night"] .daily-reward-name{color:#f4ede7!important}
+html[data-theme="night"] #dailyDesc{color:#b8aca1!important}
+html[data-theme="night"] .quest.daily.complete{background:#40351d!important;border-color:#8c7129!important;color:#eee7df!important}
+
+/* v4.5 definitive visual fixes */
+.shop-item.featured{background:#f7edd3!important;color:#5f574f!important;border:2px solid #d9a441!important;box-shadow:none!important}
+.shop-item.featured strong{color:#5f574f!important}
+.shop-item.featured small{color:#887a67!important}
+html[data-theme="night"] .shop-item.featured{background:#342b20!important;color:#eee7df!important;border-color:#8a6e2d!important}
+html[data-theme="night"] .shop-item.featured strong{color:#eee7df!important}
+html[data-theme="night"] .shop-item.featured small{color:#b7aa9d!important}
+.quest-coin{display:inline-grid;place-items:center;width:16px;height:16px;min-width:16px;border-radius:50%;background:linear-gradient(145deg,#fff1a0,#e8b62d);border:1.5px solid #9b6408;color:#7b5107;font-size:9px;font-weight:1000;line-height:1;vertical-align:-3px;box-shadow:inset 0 1px 0 #fff8c4;margin-left:2px}
+.quest-reward .quest-coin{margin-right:1px}
+
+
+/* v4.6 coin alignment fix */
+.game-coin-icon{display:inline-grid;place-items:center;width:17px;height:17px;min-width:17px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:9px;font-weight:1000;line-height:1;vertical-align:-3px;box-shadow:inset 0 1px 0 #fff7bf,0 1px 1px #0002;margin-left:2px}.game-coin-icon>span{transform:translateY(-.2px)}.quest-reward .game-coin-icon{width:16px;height:16px;min-width:16px;font-size:8px;vertical-align:-3px}.shop-item .game-coin-icon{width:15px;height:15px;min-width:15px;font-size:8px;vertical-align:middle;margin-left:0;position:relative;top:0}.shop-panel .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}.shop-item.featured.shop-day-force{background:#f7edd3!important;color:#5f574f!important;border:2px solid #d9a441!important}.shop-item.featured.shop-day-force strong{color:#5f574f!important}.shop-item.featured.shop-day-force small{color:#887a67!important}.shop-item.featured.shop-night-force{background:#342b20!important;color:#eee7df!important;border:2px solid #8a6e2d!important}.shop-item.featured.shop-night-force strong{color:#eee7df!important}.shop-item.featured.shop-night-force small{color:#b7aa9d!important}
+
+
+/* v5.0 game feel */
+.game{--era-hue:28;--era-color:hsl(var(--era-hue) 62% 55%);transition:background .45s ease,box-shadow .45s ease}
+.game.era-themed{background:linear-gradient(180deg,hsl(var(--era-hue) 55% 96% / .44),transparent 38%)}
+.game.era-themed .grid{box-shadow:0 0 0 3px hsl(var(--era-hue) 42% 55% / .18),0 12px 32px hsl(var(--era-hue) 55% 35% / .14)}
+.game.era-themed .mult{background:hsl(var(--era-hue) 34% 56%);color:white}
+.era-progress-card{position:relative;z-index:1;margin:0 0 10px;padding:9px 11px;background:#f1ede6;border-radius:9px;border:1px solid #e0d7cc;overflow:hidden}
+.era-progress-card:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,hsl(var(--era-hue) 65% 55% / .10),transparent 65%);pointer-events:none}
+.era-progress-top{position:relative;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;color:#776e65}.era-progress-top span{font-weight:900;color:#8f7a66}.era-progress-bar{position:relative;height:8px;margin-top:7px;background:#d7cec5;border-radius:99px;overflow:hidden}.era-progress-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,hsl(var(--era-hue) 62% 48%),hsl(var(--era-hue) 78% 62%));border-radius:99px;transition:width .35s ease}.era-progress-card small{position:relative;display:block;margin-top:5px;color:#94897f;font-size:9px;font-weight:700}
+.core-tree-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.core-tree-head h3{margin-bottom:3px}.core-free{min-width:58px;background:#e7def4;border-radius:10px;text-align:center;padding:7px}.core-free b{display:block;font-size:20px;color:#8069a8}.core-free small{font-size:9px;color:#8e7da5;font-weight:900}.core-skill-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.core-skill{background:#e8e1d8;border-radius:9px;padding:9px;border:1px solid transparent;display:flex;flex-direction:column;gap:5px;min-height:118px}.core-skill.maxed{background:#e4eadf;border-color:#b7c6ae}.core-skill-top{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}.core-skill-title{font-size:11px;font-weight:900}.core-skill-rank{font-size:9px;font-weight:900;color:#8f7a66;background:#d8cfc6;border-radius:999px;padding:3px 6px}.core-skill small{font-size:9px;line-height:1.25;color:#8f857a}.core-skill .mini{margin-top:auto;width:100%;font-size:9px}.core-skill .mini.can{background:#8069a8}.core-skill .mini:disabled{opacity:.5}
+.merge-fly{position:fixed;z-index:9999;pointer-events:none;display:grid;place-items:center;font-size:34px;line-height:1;filter:drop-shadow(0 4px 8px #0005)}.cell.merge-impact{animation:mergeImpact .32s ease}.cell.merge-impact:after{content:"";position:absolute;inset:8%;border-radius:50%;border:3px solid hsl(var(--era-hue) 75% 58% / .7);animation:mergeRing .42s ease-out forwards;pointer-events:none}.item.merge-hit{animation:mergeHitV5 .34s cubic-bezier(.2,.85,.35,1.25)}.item.era-capstone{box-shadow:inset 0 0 0 3px #fff7,0 0 18px hsl(var(--era-hue) 75% 58% / .55)}
+@keyframes mergeHitV5{0%{transform:scale(.58);filter:brightness(1.8)}55%{transform:scale(1.16);filter:brightness(1.25)}100%{transform:scale(1);filter:brightness(1)}}@keyframes mergeImpact{0%{transform:scale(.9)}48%{transform:scale(1.045)}100%{transform:scale(1)}}@keyframes mergeRing{0%{transform:scale(.35);opacity:.95}100%{transform:scale(1.3);opacity:0}}
+html[data-theme="night"] .era-progress-card{background:#2a241f;border-color:#40362e}html[data-theme="night"] .era-progress-top{color:#eee5dc}html[data-theme="night"] .era-progress-top span{color:#d9c8b7}html[data-theme="night"] .era-progress-bar{background:#443a31}html[data-theme="night"] .era-progress-card small{color:#b8aa9c}html[data-theme="night"] .core-free{background:#342b45}html[data-theme="night"] .core-free b{color:#c7aaff}html[data-theme="night"] .core-free small{color:#b8a7cc}html[data-theme="night"] .core-skill{background:#2a241f;color:#eee7df}html[data-theme="night"] .core-skill.maxed{background:#253025;border-color:#415941}html[data-theme="night"] .core-skill-rank{background:#40362e;color:#d9c8b7}html[data-theme="night"] .core-skill small{color:#b7aa9d}html[data-theme="night"] .game.era-themed{background:linear-gradient(180deg,hsl(var(--era-hue) 45% 18% / .38),transparent 42%)}
+@media(max-width:1024px){.core-skill-list{grid-template-columns:1fr 1fr}.era-progress-card{margin-bottom:8px}.merge-fly{font-size:30px}}
+@media(max-width:390px){.core-skill-list{grid-template-columns:1fr}.era-progress-top{font-size:11px}}
+
+
+/* v1.0 RC1 · production release candidate */
+.rare-legend{margin-top:10px;padding:9px 11px;border:1px solid #d8c8ab;border-radius:14px;background:#f7f1e6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:10px;font-weight:800;color:#776e65}.rare-legend b{font-size:11px}.rare-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;background:#fffaf0;border:1px solid #dfd0b8}.rare-chip.overcharged{border-color:#67aef5}.rare-chip.golden{border-color:#e2b42f}.rare-chip.prototype{border-color:#a978e8}
+.item.rare-overcharged{box-shadow:0 0 0 3px #5fb6ff inset,0 0 16px #5fb6ff77}.item.rare-golden{box-shadow:0 0 0 3px #f0c33c inset,0 0 18px #f0c33c99}.item.rare-prototype{box-shadow:0 0 0 3px #bc76ff inset,0 0 22px #bc76ffaa;animation:prototypePulse 1.45s ease-in-out infinite alternate}.rare-badge{position:absolute;left:4px;top:4px;min-width:22px;height:22px;padding:0 4px;border-radius:999px;background:#fffdf2dd;color:#4d4339;display:grid;place-items:center;font-size:11px;font-weight:950;box-shadow:0 2px 5px #0003;z-index:3}.rare-golden .rare-badge{background:#ffe27a;color:#795400}.rare-overcharged .rare-badge{background:#a9dcff;color:#145985}.rare-prototype .rare-badge{background:#dab6ff;color:#58278a}.rare-new{animation:rareBirth .6s cubic-bezier(.2,.85,.25,1)}
+@keyframes prototypePulse{from{filter:brightness(1)}to{filter:brightness(1.16)}}@keyframes rareBirth{0%{transform:scale(.4) rotate(-8deg);filter:brightness(1.6)}60%{transform:scale(1.14) rotate(2deg)}100%{transform:scale(1)}}
+.research-card h3{margin-bottom:4px}.research-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0 10px}.research-summary .research-count{font-size:11px;font-weight:900;background:#ece2cd;border-radius:999px;padding:6px 9px;color:#746759}.research-list{display:grid;gap:10px}.research-tier{border:1px solid #dac9ac;border-radius:14px;background:#f7f1e6;padding:10px}.research-tier.locked{opacity:.62}.research-tier-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}.research-tier-head b{font-size:12px}.research-tier-head span{font-size:9px;font-weight:900;color:#8a7b69}.research-options{display:grid;grid-template-columns:1fr 1fr;gap:7px}.research-option{border:1px solid #d7c7ae;border-radius:12px;background:#fffaf1;padding:8px;min-height:94px;display:flex;flex-direction:column;gap:4px}.research-option.selected{border:2px solid #d8a52e;background:#fff4cf;box-shadow:0 0 0 2px #edc22e22}.research-option.rejected{opacity:.48}.research-option strong{font-size:11px}.research-option small{font-size:9px;line-height:1.3;color:#827465;flex:1}.research-option button{width:100%;margin-top:4px}.research-warning{margin-top:7px;font-size:9px;color:#9c6c1d;font-weight:800}
+html[data-theme="night"] .rare-legend{background:#28221d;border-color:#453b32;color:#d8c9ba}html[data-theme="night"] .rare-chip{background:#1f1b18;border-color:#4a4038}html[data-theme="night"] .research-summary .research-count{background:#342c24;color:#e7dacb}html[data-theme="night"] .research-tier{background:#28221d;border-color:#453b32}html[data-theme="night"] .research-option{background:#1f1b18;border-color:#443a32}html[data-theme="night"] .research-option small{color:#b8aa9d}html[data-theme="night"] .research-option.selected{background:#493a1d;border-color:#b38b29}html[data-theme="night"] .research-warning{color:#e5bd67}
+@media(max-width:1024px){.research-options{grid-template-columns:1fr}.rare-legend{font-size:9px}.research-option{min-height:82px}.rare-badge{left:2px;top:2px;min-width:19px;height:19px;font-size:10px}.item.rare-overcharged{box-shadow:0 0 0 2px #5fb6ff inset,0 0 10px #5fb6ff55}.item.rare-golden{box-shadow:0 0 0 2px #f0c33c inset,0 0 11px #f0c33c66}.item.rare-prototype{box-shadow:0 0 0 2px #bc76ff inset,0 0 12px #bc76ff77}}
+
+
+/* v1.0 RC1 responsive navigation */
+@media(max-width:1024px){
+  .game{height:auto!important;min-height:0!important;overflow:visible!important}
+  .grid-wrap{flex:none!important;min-height:0!important;display:block!important}
+  .grid{width:min(100%,680px)!important;margin:0 auto!important}
+  .controls{position:static!important;bottom:auto!important;z-index:2!important;margin-top:10px!important;background:transparent!important;padding:0!important}
+  .rare-legend{margin-top:10px!important}
+  .mobile-nav{display:grid!important}
+  .side{overflow:visible!important}
+}
+@media(min-width:1025px){
+  .mobile-nav{display:none!important}
+  .grid{width:min(68vh,calc(100vh - 300px),100%)!important}
+  .controls{position:static!important}
+}
+
+
+
+/* v1.0 RC1 definitive factory layout */
+.left-column{min-height:0;display:flex;flex-direction:column;gap:10px}
+.left-column .game{flex:1;min-height:0}
+.factory-bottom{flex:0 0 auto;display:block}
+.factory-bottom .controls{position:static!important;margin:0!important;padding:0!important;background:transparent!important;z-index:2!important}
+.factory-bottom .rare-legend{margin-top:10px!important}
+@media(min-width:1025px){
+  .left-column{height:100%;overflow:hidden}
+  .left-column .game{display:flex;flex-direction:column;overflow:hidden!important}
+  .left-column .grid-wrap{flex:1 1 auto!important;min-height:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;padding:6px 0!important}
+  .left-column .grid{height:100%!important;width:auto!important;max-height:100%!important;max-width:100%!important;aspect-ratio:1/1!important;margin:0 auto!important}
+}
+@media(max-width:1024px){
+  .left-column{display:block;height:auto;overflow:visible}
+  .left-column .game{display:block;height:auto!important;overflow:visible!important}
+  .left-column .grid-wrap{display:block!important;overflow:visible!important}
+  .left-column .grid{width:min(100%,680px)!important;height:auto!important;aspect-ratio:1/1!important;margin:0 auto!important}
+  .factory-bottom{margin-top:10px}
+  body[data-mobile-tab="upgrades"] .left-column,body[data-mobile-tab="automation"] .left-column,body[data-mobile-tab="orders"] .left-column{display:none!important}
+  body[data-mobile-tab="factory"] .left-column{display:block!important}
+}
+
+
+/* v1.0 RC1 · production services */
+.service-disabled{opacity:.58;filter:grayscale(.35);cursor:not-allowed!important}.production-status{margin-top:8px;padding:8px 10px;border-radius:10px;background:#eee7dc;color:#7b7065;font-size:10px;line-height:1.35}html[data-theme="night"] .production-status{background:#2a241f;color:#b9aa9c}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">⚙️ MERGE <span>FACTORY</span></div>
+    <div class="stat"><small>DINERO</small><b id="money">$0</b></div>
+    <div class="stat"><small>PRODUCCIÓN</small><b id="income">$0/s</b></div>
+    <div class="stat coin-stat"><small>MONEDAS</small><b id="coins"><span class="coin-inline"><svg class="coin-svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="cg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff3a6"/><stop offset="55%" stop-color="#f1c94b"/><stop offset="100%" stop-color="#c98712"/></linearGradient></defs><circle cx="32" cy="32" r="25" fill="url(#cg0)" stroke="#9b6408" stroke-width="4"/><circle cx="32" cy="32" r="18" fill="none" stroke="#ffefb0" stroke-width="3" opacity=".8"/><text x="32" y="38" text-anchor="middle" font-size="22" font-weight="900" fill="#8b5d08">M</text></svg><span>0</span></span></b></div>
+    <button class="shop-top" id="openShop">🛒 TIENDA</button>
+    <button class="settings-top" id="openSettings" type="button" aria-label="Abrir ajustes" title="Ajustes">⚙️</button>
+  </div>
+  <div class="main">
+    <div class="left-column">
+    <section class="game" id="game">
+      <div class="toast" id="toast"></div><div class="particles" id="particles"></div>
+      <div class="factory-head"><div><h2>Línea de producción</h2><p>Fusiona dos máquinas iguales para subirlas de nivel.</p></div><div class="mult" id="mult">x1.00</div></div>
+      <div class="era-progress-card" id="eraProgressCard">
+        <div class="era-progress-top"><b id="eraProgressLabel">⚙️ Era 1 · Taller</b><span id="eraProgressNext">N1 / N10</span></div>
+        <div class="era-progress-bar"><i id="eraProgressFill"></i></div>
+        <small id="eraProgressHint">Siguiente era en N11</small>
+      </div>
+      <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+    </section>
+    <div class="factory-bottom" id="factoryBottom">
+      <div class="controls" id="factoryControls">
+        <button class="btn primary" id="buy">➕ Máquina <span id="buyCost">$10</span></button>
+        <button class="btn blue" id="boost">⚡ Turbo 30s</button>
+        <button class="btn warn" id="sort">↻ Ordenar</button>
+      </div>
+      <div class="rare-legend" id="rareLegend">
+        <b>Variantes raras</b>
+        <span class="rare-chip overcharged">⚡ Sobrecargada ×1,6</span>
+        <span class="rare-chip golden">✨ Dorada ×2,5</span>
+        <span class="rare-chip prototype">💎 Prototipo ×4</span><span class="sub">Dos variantes iguales conservan su rareza al fusionarse.</span>
+      </div>
+    </div>
+    </div>
+    <aside class="side">
+      <div class="card mobile-panel-card" id="upgradesCard" data-mobile-panel="upgrades">
+        <h3>🏭 Mejoras de fábrica</h3>
+        <div class="sub" style="margin-bottom:6px">Mejoras de esta fábrica. El prestigio y la ingeniería de Núcleos están también en esta sección.</div>
+        <div class="upgrade"><div class="icon">⚙️</div><div class="txt"><b>Velocidad</b><small id="speedDesc">+20% producción</small></div><button class="mini" id="upSpeed"></button></div>
+        <div class="upgrade"><div class="icon">📦</div><div class="txt"><b>Proveedor</b><small id="supplierDesc">Máquinas iniciales mejores</small></div><button class="mini" id="upSupplier"></button></div>
+        <div class="upgrade"><div class="icon">💹</div><div class="txt"><b>Mercado</b><small id="marketDesc">+15% valor</small></div><button class="mini" id="upMarket"></button></div>
+      </div>
+      <div class="card mobile-factory-extra mobile-upgrades-related core-tree-card" id="coreTreeCard">
+        <div class="core-tree-head"><div><h3>💎 Ingeniería de Núcleos</h3><div class="sub">Asigna Núcleos a mejoras permanentes sin perder su multiplicador.</div></div><div class="core-free"><b id="freeCores">0</b><small>libres</small></div></div>
+        <div class="core-skill-list" id="coreSkillList"></div>
+      </div>
+      <div class="card mobile-factory-extra mobile-upgrades-related research-card" id="researchCard">
+        <h3>🔬 Investigación</h3>
+        <div class="sub">Cada hito abre una decisión permanente. Elige una tecnología; la alternativa queda bloqueada para esta partida.</div>
+        <div class="research-summary"><span class="sub">Tecnologías elegidas</span><span class="research-count" id="researchCount">0 / 6</span></div>
+        <div class="research-list" id="researchList"></div>
+      </div>
+      <div class="card prestige mobile-factory-extra mobile-upgrades-related" id="prestigeCard">
+        <h3>💎 Prestigio · Reiniciar fábrica</h3>
+        <div class="sub">Reinicia dinero, tablero y mejoras temporales para conseguir un Núcleo permanente. Antes de hacerlo verás exactamente qué conservas.</div>
+        <div style="margin-top:8px;font-weight:900">Núcleos: <span id="cores">0</span> · Próximo: <span id="coreReq">$20K</span></div>
+        <div class="era-current" id="currentEraLabel">ERA 1 · Taller</div>
+        <button class="btn" id="prestige">VER PRESTIGIO</button>
+      </div>
+      <div class="card mobile-panel-card" id="automationCard" data-mobile-panel="automation">
+        <h3>🤖 Automatización</h3>
+        <div class="automation-list">
+          <div class="auto-row" id="autoBuyRow"><div class="auto-title">🛒 Auto-compra <span id="autoBuyStatus"></span></div><button class="auto-toggle" id="autoBuyToggle">BLOQ.</button><div class="auto-desc" id="autoBuyDesc">Se desbloquea con 1 Núcleo.</div></div>
+          <div class="auto-row" id="autoMergeRow"><div class="auto-title">🔗 Auto-fusión <span id="autoMergeStatus"></span></div><button class="auto-toggle" id="autoMergeToggle">BLOQ.</button><div class="auto-desc" id="autoMergeDesc">Se desbloquea con 2 Núcleos.</div></div>
+          <div class="auto-row" id="autoClaimRow"><div class="auto-title">📋 Auto-reclamo <span id="autoClaimStatus"></span></div><button class="auto-toggle" id="autoClaimToggle">BLOQ.</button><div class="auto-desc" id="autoClaimDesc">Se desbloquea con 5 Núcleos.</div></div>
+          <div class="auto-row" id="autoCleanRow"><div class="auto-title">🧹 Auto-limpieza <span id="autoCleanStatus"></span></div><button class="auto-toggle" id="autoCleanToggle">BLOQ.</button><div class="auto-desc" id="autoCleanDesc">Se desbloquea con 6 Núcleos.</div></div>
+        </div>
+        <div class="auto-advanced">
+          <div class="auto-setting" id="mergePriorityBox"><label>Prioridad de fusión · 8 💎</label><select id="mergePriority"><option value="low">Niveles bajos</option><option value="high">Niveles altos</option></select></div>
+          <div class="auto-setting" id="reserveBox"><label>Reserva de dinero · 8 💎</label><select id="reservePct"><option value="0">Sin reserva</option><option value="0.10">10%</option><option value="0.25">25%</option><option value="0.50">50%</option></select></div>
+        </div>
+        <div class="auto-next" id="autoNext">Consigue Núcleos para automatizar tu fábrica.</div>
+      </div>
+      <div class="card mobile-panel-card" id="questsCard" data-mobile-panel="orders">
+        <h3>📋 Pedidos / Misiones</h3>
+        <div class="quest-list" id="ordersList"></div>
+        <div class="sub" style="margin-top:8px">Hay tres pedidos simultáneos: fusionar, comprar, producir, mejorar o crear máquinas. Dan dinero, monedas y pueden dar Baterías.</div>
+        <div class="daily-missions-box">
+          <div class="daily-missions-head"><b>☀ Misiones diarias</b><span class="daily-streak-chip" id="dailyMissionStreak">Racha 0/14</span></div>
+          <div class="sub" style="margin-top:6px">Completa las 3 misiones del día. Si completas <b>14 días seguidos</b>, ganas una recompensa jugosa.</div>
+          <div class="streak-track" id="dailyMissionTrack" aria-label="Progreso de racha de 14 días"></div>
+          <div class="quest-list daily-mission-list" id="dailyMissionsList"></div>
+          <div class="daily-mission-grand" id="dailyMissionRewardText">Gran premio 14 días: 500 monedas + 2 Super Baterías + 3 cajas premium + 5 bombas.</div>
+          <button class="btn primary" id="claimGrandDailyReward" style="display:none">COBRAR PREMIO 14 DÍAS</button>
+        </div>
+      </div>
+      <div class="card mobile-factory-extra" id="consumablesCard">
+        <h3>🧪 Consumibles</h3>
+        <div class="consumables">
+          <div class="consumable"><div class="consumable-top"><span class="consumable-icon">🔋</span><span class="consumable-count" id="batteryCount">x0</span></div><b>Batería industrial</b><small>x2 producción durante 5 minutos. Puede acumular duración.</small><button class="mini" id="useBattery">USAR</button></div>
+          <div class="consumable"><div class="consumable-top"><span class="consumable-icon">📦</span><span class="consumable-count" id="crateCount">x0</span></div><b>Caja premium</b><small>Genera una máquina de tu proveedor, con opción de +1 nivel.</small><button class="mini" id="useCrate">ABRIR</button></div>
+          <div class="consumable"><div class="consumable-top"><span class="consumable-icon">🧲</span><span class="consumable-count" id="magnetCount">x0</span></div><b>Imán de fusión</b><small>Fusiona automáticamente todos los pares posibles una vez.</small><button class="mini" id="useMagnet">USAR</button></div>
+          <div class="consumable"><div class="consumable-top"><span class="consumable-icon">⏱️</span><span class="consumable-count" id="warpCount">x0</span></div><b>Salto temporal</b><small>Recibe al instante 120 segundos de producción.</small><button class="mini" id="useWarp">USAR</button></div>
+          <div class="consumable"><div class="consumable-top"><span class="consumable-icon">💣</span><span class="consumable-count" id="bombCount">x0</span></div><b>Bomba</b><small>Elimina una máquina del tablero para liberar una casilla.</small><button class="mini" id="useBomb">USAR</button></div>
+          <div class="consumable"><div class="consumable-top"><span class="consumable-icon">🔋⚡</span><span class="consumable-count" id="superBatteryCount">x0</span></div><b>Super Batería</b><small>x2 producción durante 12 horas. Solo se obtiene en la tienda.</small><button class="mini" id="useSuperBattery">USAR</button></div>
+        </div>
+        <div class="sub" style="margin-top:8px">Las Baterías y Bombas pueden aparecer en pedidos o comprarse. La Super Batería solo se compra en tienda. El Turbo de 30 s es gratis e ilimitado.</div>
+      </div>
+      <div class="card mobile-factory-extra" id="collectionCard">
+        <h3>🧰 Colección</h3>
+        <div class="collection-summary">
+          <div><b id="collectionCount">0 / 100</b><div class="sub">Máquinas descubiertas</div><div class="sub" id="collectionNextMilestone">Siguiente hito: N10</div></div>
+          <button class="mini" id="openCollection">VER</button>
+        </div>
+      </div>
+      <div class="card mobile-factory-extra" id="achievementsCard">
+        <h3>🏅 Logros permanentes</h3>
+        <div class="achievement-summary"><div><b id="achievementCount">0 / 10</b><div class="sub">Recompensas de progreso</div></div></div>
+        <div class="achievement-list" id="achievementList"></div>
+      </div>
+      <div class="card mobile-factory-extra" id="statsCard">
+        <h3>📊 Estadísticas</h3>
+        <div class="sub" id="stats">Máquina máxima: N1<br>Fusiones: 0<br>Ganado total: $0</div><div class="balance-note">Las estadísticas permanentes no se reinician al prestigiar y sirven para medir el ritmo real de progreso.</div>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Navegación principal">
+    <button class="mobile-nav-btn" data-tab="upgrades" type="button"><span>⬆️</span><b>Mejoras</b><i id="upgradeBadge" hidden>!</i></button>
+    <button class="mobile-nav-btn" data-tab="automation" type="button"><span>🤖</span><b>Auto</b></button>
+    <button class="mobile-nav-btn active" data-tab="factory" type="button"><span>🏭</span><b>Fábrica</b></button>
+    <button class="mobile-nav-btn" data-tab="orders" type="button"><span>📋</span><b>Misiones</b><i id="questBadge" hidden>!</i></button>
+    <button class="mobile-nav-btn" data-tab="shop" type="button"><span>🛒</span><b>Tienda</b></button>
+  </nav>
+  <div class="footer"><span>Guardado automático local</span><span>v1.0.0 RC1 · Release Candidate</span></div>
+</div>
+
+<div class="empty-consumable-overlay" id="emptyConsumableOverlay" aria-hidden="true">
+  <div class="empty-consumable-modal" role="dialog" aria-modal="true" aria-labelledby="emptyConsumableTitle">
+    <div class="empty-consumable-icon" id="emptyConsumableIcon">🧪</div>
+    <h3 id="emptyConsumableTitle">No te quedan consumibles</h3>
+    <p id="emptyConsumableText">Puedes conseguir monedas viendo un anuncio o comprar monedas en la tienda.</p>
+    <div class="empty-consumable-actions">
+      <button class="btn warn" id="emptyWatchAd">▶ Ver anuncio · +25 🪙</button>
+      <button class="btn blue" id="emptyOpenShop">🛒 Comprar monedas</button>
+    </div>
+    <button class="empty-consumable-cancel" id="emptyClose">Seguir jugando</button>
+  </div>
+</div>
+
+
+
+<div class="collection-overlay" id="collectionOverlay" aria-hidden="true">
+  <div class="collection-panel">
+    <div class="settings-head"><h2>🧰 Colección de máquinas</h2><button class="settings-close" id="closeCollection" type="button">✕</button></div>
+    <div class="collection-topline"><b id="collectionCountLarge">0 / 100</b><span>descubiertas</span></div>
+    <div class="collection-milestones" id="collectionMilestones"></div>
+    <div class="collection-grid" id="collectionGrid"></div>
+  </div>
+</div>
+
+<div class="tutorial-overlay" id="tutorialOverlay" aria-hidden="true">
+  <div class="tutorial-panel">
+    <div class="tutorial-step-pill" id="tutorialStepPill">Paso 1 / 4</div>
+    <h2 id="tutorialTitle">Bienvenido a Merge Factory</h2>
+    <p id="tutorialBody">Compra máquinas, fusiona dos iguales y construye una fábrica cada vez más automática.</p>
+    <div class="tutorial-art" id="tutorialArt">⚙️ + ⚙️ = 🏭</div>
+    <div class="tutorial-actions">
+      <button class="btn" id="tutorialSkip">Saltar</button>
+      <button class="btn primary" id="tutorialNext">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<div class="reward-overlay" id="dailyOverlay" aria-hidden="true">
+  <div class="reward-panel">
+    <div class="settings-head"><h2>🎁 Recompensa diaria</h2><button class="settings-close" id="closeDaily" type="button">✕</button></div>
+    <div class="daily-streak" id="dailyStreak">Día 1</div>
+    <div class="daily-reward-card">
+      <div class="daily-reward-icon" id="dailyIcon">🪙</div>
+      <div class="daily-reward-name" id="dailyName">25 monedas</div>
+      <div class="sub" id="dailyDesc">Vuelve mañana para mejorar tu racha.</div>
+    </div>
+    <button class="btn primary" id="claimDaily">COBRAR</button>
+  </div>
+</div>
+
+<div class="reward-overlay" id="offlineOverlay" aria-hidden="true">
+  <div class="reward-panel">
+    <div class="settings-head"><h2>💤 Ganancias offline</h2><button class="settings-close" id="closeOffline" type="button">✕</button></div>
+    <div class="offline-gain" id="offlineGain">$0</div>
+    <div class="sub" id="offlineText">Tu fábrica siguió trabajando mientras estabas fuera.</div>
+    <div class="tutorial-actions">
+      <button class="btn" id="claimOffline">Cobrar</button>
+      <button class="btn warn" id="claimOfflineAd">Ver anuncio · x2</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="era-overlay" id="eraOverlay" aria-hidden="true">
+  <div class="era-panel">
+    <div class="era-icon" id="eraUnlockIcon">🤖</div>
+    <div class="sub">NUEVA ERA DESBLOQUEADA</div>
+    <div class="era-title" id="eraUnlockTitle">Automatización</div>
+    <div class="sub" id="eraUnlockRange">N21–N30</div>
+    <div class="era-reward" id="eraUnlockReward">+75 monedas · +1 caja premium</div>
+    <button class="btn primary" id="closeEraUnlock">CONTINUAR</button>
+  </div>
+</div>
+
+<div class="prestige-overlay" id="prestigeOverlay" aria-hidden="true">
+  <div class="prestige-panel">
+    <div class="settings-head"><h2>💎 Prestigio</h2><button class="settings-close" id="closePrestige" type="button">✕</button></div>
+    <div class="sub">Tu multiplicador permanente de Núcleos aumentará:</div>
+    <div class="prestige-compare"><div class="prestige-mult"><small>AHORA</small><b id="prestigeNow">x1.00</b></div><div class="prestige-arrow">→</div><div class="prestige-mult"><small>DESPUÉS</small><b id="prestigeNext">x1.25</b></div></div>
+    <div class="prestige-keep"><b>✅ Mantienes</b><br>Monedas, consumibles, colección, hitos, logros, automatizaciones, árbol de Núcleos, investigación, rachas y estadísticas permanentes.<br><br><b>↺ Se reinicia</b><br>Dinero, tablero (incluidas las variantes raras activas), mejoras de Velocidad/Proveedor/Mercado y progreso de pedidos de esta fábrica.</div>
+    <button class="btn primary" id="confirmPrestige" style="width:100%;margin-top:14px">CONFIRMAR PRESTIGIO</button>
+  </div>
+</div>
+
+<div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+  <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="settings-head"><h2 id="settingsTitle">⚙️ Ajustes</h2><button class="settings-close" id="closeSettings" type="button" aria-label="Cerrar ajustes">✕</button></div>
+    <div class="setting-row">
+      <div class="setting-copy"><b>🌙 Modo noche</b><small>Oscurece la interfaz y las fichas para jugar con menos brillo.</small></div>
+      <span class="setting-value" id="themeValue">DÍA</span>
+      <label class="switch"><input id="nightModeToggle" type="checkbox" aria-label="Activar modo noche"><span></span></label>
+    </div>
+    <div class="setting-row volume-row">
+      <div class="setting-copy"><b>🔊 Volumen</b><small>Ajusta la intensidad de todos los sonidos del juego.</small></div>
+      <div class="volume-control">
+        <span class="volume-icon" id="volumeIcon" aria-hidden="true">🔊</span>
+        <input class="volume-slider" id="volumeSlider" type="range" min="0" max="100" step="1" value="70" aria-label="Volumen general">
+        <span class="setting-value" id="soundValue">70%</span>
+      </div>
+    </div>
+    <div class="production-status" id="productionStatus">Servicios externos: comprobando…</div>
+      <div class="danger-zone">
+      <div class="setting-copy"><b>🗑️ Reiniciar partida</b><small>Borra el progreso del juego, pero conserva tus ajustes de tema y volumen.</small></div>
+      <button class="btn danger" id="resetProgress" type="button" style="margin-top:10px;width:100%">REINICIAR PARTIDA</button>
+    </div>
+  </div>
+</div>
+
+<div class="shop-overlay" id="shopOverlay" aria-hidden="true">
+  <div class="shop-panel">
+    <div class="shop-head"><h2>🛒 Tienda de fábrica</h2><button class="close-shop" id="closeShop">✕</button></div>
+    <div class="shop-balance">Saldo: <span id="shopCoins"><span class="coin-inline"><svg class="coin-svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="cg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff3a6"/><stop offset="55%" stop-color="#f1c94b"/><stop offset="100%" stop-color="#c98712"/></linearGradient></defs><circle cx="32" cy="32" r="25" fill="url(#cg1)" stroke="#9b6408" stroke-width="4"/><circle cx="32" cy="32" r="18" fill="none" stroke="#ffefb0" stroke-width="3" opacity=".8"/><text x="32" y="38" text-anchor="middle" font-size="22" font-weight="900" fill="#8b5d08">M</text></svg><span>0</span></span></span></div>
+
+    <div class="shop-section">
+      <h3>🎬 Monedas gratis</h3>
+      <div class="shop-grid">
+        <div class="shop-item featured" style="background:#f7edd3;color:#5f574f;border:2px solid #d9a441;box-shadow:none"><strong style="color:#5f574f">▶ Anuncio recompensado</strong><small style="color:#887a67">Mira un anuncio completo y recibe monedas dentro del juego.</small><button class="btn warn" id="watchAd">+25 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+        <div class="shop-item"><strong>📋 Completa pedidos</strong><small>Cada pedido entrega monedas; algunos también incluyen una Batería industrial o una Bomba.</small><button class="btn" id="closeToQuests">VOLVER AL JUEGO</button></div>
+      </div>
+    </div>
+
+    <div class="shop-section" id="coinPackSection" style="display:none">
+      <h3>💳 Packs de monedas</h3>
+      <div class="shop-grid">
+        <div class="shop-item"><strong>100 monedas</strong><small>Pack pequeño.</small><button class="btn blue buy-pack" data-pack="coins_100">0,99 €</button></div>
+        <div class="shop-item"><strong>550 monedas</strong><small>10% extra frente al pack pequeño.</small><button class="btn blue buy-pack" data-pack="coins_550">4,99 €</button></div>
+        <div class="shop-item featured" style="background:#f7edd3;color:#5f574f;border:2px solid #d9a441;box-shadow:none"><strong style="color:#5f574f">1.200 monedas</strong><small style="color:#887a67">Pack grande.</small><button class="btn blue buy-pack" data-pack="coins_1200">9,99 €</button></div>
+      </div>
+      <div class="shop-note">Los pagos reales están preparados mediante un hook de compra, pero necesitan tu proveedor de pagos/backend para validar la compra antes de entregar monedas.</div>
+    </div>
+
+    <div class="shop-section">
+      <h3>🧪 Gastar monedas</h3>
+      <div class="shop-grid">
+        <div class="shop-item"><strong>🔋 Batería industrial</strong><small>x2 producción durante 5 min.</small><button class="btn buy-consumable" data-item="battery" data-cost="50">50 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+        <div class="shop-item"><strong>📦 Caja premium</strong><small>Máquina de proveedor, 20% de opción +1 nivel.</small><button class="btn buy-consumable" data-item="crate" data-cost="30">30 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+        <div class="shop-item"><strong>🧲 Imán de fusión</strong><small>Fusiona todos los pares posibles automáticamente.</small><button class="btn buy-consumable" data-item="magnet" data-cost="35">35 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+        <div class="shop-item"><strong>⏱️ Salto temporal</strong><small>Recibe 120 segundos de producción al instante.</small><button class="btn buy-consumable" data-item="warp" data-cost="40">40 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+        <div class="shop-item"><strong>💣 Bomba</strong><small>Elimina una máquina del tablero y libera su casilla.</small><button class="btn buy-consumable" data-item="bomb" data-cost="25">25 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+        <div class="shop-item featured" style="background:#f7edd3;color:#5f574f;border:2px solid #d9a441;box-shadow:none"><strong style="color:#5f574f">🔋⚡ Super Batería Industrial</strong><small style="color:#887a67">x2 producción durante 12 horas. Exclusiva de tienda.</small><button class="btn buy-consumable" data-item="superBattery" data-cost="500">500 <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:8px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:inset 0 1px 0 #fff7bf;position:relative;top:0;margin-left:0;flex:0 0 15px">M</span></button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+const $=s=>document.querySelector(s), gridEl=$('#grid');
+const APP_VERSION='1.0.0-rc1';
+const BUILD_MODE='production';
+const TELEMETRY_KEY='mergeFactoryTelemetry';
+const SAVE_KEY='mergeFactorySave';
+const BACKUP_KEY='mergeFactorySaveBackup';
+function telemetrySnapshot(){try{return JSON.parse(localStorage.getItem(TELEMETRY_KEY)||'[]')}catch(e){return []}}
+function trackEvent(name,props={}){const evt={name,ts:Date.now(),version:APP_VERSION,props};try{const list=telemetrySnapshot();list.push(evt);while(list.length>200)list.shift();localStorage.setItem(TELEMETRY_KEY,JSON.stringify(list));}catch(e){}try{const a=window.MergeFactoryAnalytics;if(a&&typeof a.track==='function')Promise.resolve(a.track(name,props)).catch(()=>{});}catch(e){}}
+function hasRewardedAds(){return !!((window.MergeFactoryAds&&typeof window.MergeFactoryAds.reward==='function')||typeof window.adBreak==='function')}
+function hasPayments(){return !!(window.MergeFactoryPayments&&typeof window.MergeFactoryPayments.purchase==='function')}
+function setServiceButton(id,available,unavailableText){const b=$('#'+id);if(!b)return;if(!b.dataset.readyHtml)b.dataset.readyHtml=b.innerHTML;b.disabled=!available;b.classList.toggle('service-disabled',!available);b.innerHTML=available?b.dataset.readyHtml:unavailableText;}
+function syncProductionServices(){const ads=hasRewardedAds(),payments=hasPayments();setServiceButton('watchAd',ads,'ANUNCIO NO DISPONIBLE');setServiceButton('emptyWatchAd',ads,'ANUNCIO NO DISPONIBLE');setServiceButton('claimOfflineAd',ads,'x2 NO DISPONIBLE');const packs=$('#coinPackSection');if(packs)packs.style.display=payments?'block':'none';const status=$('#productionStatus');if(status)status.textContent=`Anuncios: ${ads?'conectados':'no disponibles'} · Pagos: ${payments?'conectados':'ocultos'}`;}
+async function requestRewardedAd(placement){trackEvent('ad_reward_requested',{placement});try{const a=window.MergeFactoryAds;if(a&&typeof a.reward==='function'){const r=await a.reward({placement});const ok=r===true||!!(r&&r.rewarded===true);trackEvent(ok?'ad_reward_completed':'ad_reward_not_granted',{placement,provider:'bridge'});return ok;}}catch(e){trackEvent('ad_reward_error',{placement,provider:'bridge',message:String(e&&e.message||e)});return false;}if(typeof window.adBreak==='function'){return await new Promise(resolve=>{let settled=false;const finish=ok=>{if(settled)return;settled=true;clearTimeout(timer);trackEvent(ok?'ad_reward_completed':'ad_reward_not_granted',{placement,provider:'adBreak'});resolve(ok)};const timer=setTimeout(()=>finish(false),60000);try{window.adBreak({type:'reward',name:placement,beforeReward:showAdFn=>{try{showAdFn()}catch(e){finish(false)}},beforeAd:()=>{gamePaused=true},afterAd:()=>{gamePaused=false;state.last=Date.now()},adViewed:()=>finish(true),adDismissed:()=>finish(false),adBreakDone:()=>finish(false)});}catch(e){finish(false)}})}trackEvent('ad_reward_unavailable',{placement});return false;}
+window.addEventListener('mergefactory:services-ready',syncProductionServices);
+window.addEventListener('error',e=>trackEvent('runtime_error',{message:String(e.message||'error'),source:String(e.filename||''),line:e.lineno||0}));
+window.addEventListener('unhandledrejection',e=>trackEvent('promise_rejection',{message:String(e.reason&&e.reason.message||e.reason||'rejection')}));
+const MACHINE_DEFS=[
+{name:'N1',emoji:'⚙️'},
+{name:'N2',emoji:'🔩'},
+{name:'N3',emoji:'🔧'},
+{name:'N4',emoji:'🛠️'},
+{name:'N5',emoji:'🔋'},
+{name:'N6',emoji:'⚡'},
+{name:'N7',emoji:'🧲'},
+{name:'N8',emoji:'🦾'},
+{name:'N9',emoji:'🤖'},
+{name:'N10',emoji:'🚜'},
+{name:'N11',emoji:'🏭'},
+{name:'N12',emoji:'🔨'},
+{name:'N13',emoji:'🧰'},
+{name:'N14',emoji:'🔥'},
+{name:'N15',emoji:'⛏️'},
+{name:'N16',emoji:'🏗️'},
+{name:'N17',emoji:'🚧'},
+{name:'N18',emoji:'🚚'},
+{name:'N19',emoji:'🚂'},
+{name:'N20',emoji:'🛢️'},
+{name:'N21',emoji:'🤖'},
+{name:'N22',emoji:'📡'},
+{name:'N23',emoji:'📟'},
+{name:'N24',emoji:'💻'},
+{name:'N25',emoji:'🖥️'},
+{name:'N26',emoji:'⌨️'},
+{name:'N27',emoji:'🖱️'},
+{name:'N28',emoji:'📱'},
+{name:'N29',emoji:'🔌'},
+{name:'N30',emoji:'💾'},
+{name:'N31',emoji:'🧪'},
+{name:'N32',emoji:'🧬'},
+{name:'N33',emoji:'⚛️'},
+{name:'N34',emoji:'🔬'},
+{name:'N35',emoji:'🧫'},
+{name:'N36',emoji:'☢️'},
+{name:'N37',emoji:'💡'},
+{name:'N38',emoji:'🔮'},
+{name:'N39',emoji:'💎'},
+{name:'N40',emoji:'🧠'},
+{name:'N41',emoji:'🚀'},
+{name:'N42',emoji:'🛰️'},
+{name:'N43',emoji:'🛸'},
+{name:'N44',emoji:'🌍'},
+{name:'N45',emoji:'🌕'},
+{name:'N46',emoji:'🪐'},
+{name:'N47',emoji:'⭐'},
+{name:'N48',emoji:'🌠'},
+{name:'N49',emoji:'☄️'},
+{name:'N50',emoji:'🌌'},
+{name:'N51',emoji:'🌑'},
+{name:'N52',emoji:'🌒'},
+{name:'N53',emoji:'🌓'},
+{name:'N54',emoji:'🌔'},
+{name:'N55',emoji:'🌕'},
+{name:'N56',emoji:'🌖'},
+{name:'N57',emoji:'🌗'},
+{name:'N58',emoji:'🌘'},
+{name:'N59',emoji:'🌞'},
+{name:'N60',emoji:'🌎'},
+{name:'N61',emoji:'⚛️'},
+{name:'N62',emoji:'🌀'},
+{name:'N63',emoji:'♾️'},
+{name:'N64',emoji:'🔷'},
+{name:'N65',emoji:'🔶'},
+{name:'N66',emoji:'🔺'},
+{name:'N67',emoji:'🔻'},
+{name:'N68',emoji:'💠'},
+{name:'N69',emoji:'✨'},
+{name:'N70',emoji:'💫'},
+{name:'N71',emoji:'🚪'},
+{name:'N72',emoji:'🗝️'},
+{name:'N73',emoji:'🔍'},
+{name:'N74',emoji:'🎲'},
+{name:'N75',emoji:'👁️'},
+{name:'N76',emoji:'🧿'},
+{name:'N77',emoji:'🕳️'},
+{name:'N78',emoji:'🔱'},
+{name:'N79',emoji:'🌀'},
+{name:'N80',emoji:'👾'},
+{name:'N81',emoji:'🌟'},
+{name:'N82',emoji:'💥'},
+{name:'N83',emoji:'☀️'},
+{name:'N84',emoji:'🌌'},
+{name:'N85',emoji:'🌠'},
+{name:'N86',emoji:'🪐'},
+{name:'N87',emoji:'🚀'},
+{name:'N88',emoji:'🛸'},
+{name:'N89',emoji:'👽'},
+{name:'N90',emoji:'🔮'},
+{name:'N91',emoji:'🕳️'},
+{name:'N92',emoji:'⚫'},
+{name:'N93',emoji:'🌑'},
+{name:'N94',emoji:'♾️'},
+{name:'N95',emoji:'💎'},
+{name:'N96',emoji:'👑'},
+{name:'N97',emoji:'🏆'},
+{name:'N98',emoji:'🌈'},
+{name:'N99',emoji:'🔥'},
+{name:'N100',emoji:'🌌'}
+];
+const ERAS=[
+{name:'Taller',emoji:'⚙️',hue:28},
+{name:'Industria',emoji:'🏭',hue:18},
+{name:'Automatización',emoji:'🤖',hue:48},
+{name:'Ciencia',emoji:'🧪',hue:145},
+{name:'Espacial',emoji:'🚀',hue:205},
+{name:'Interplanetaria',emoji:'🪐',hue:225},
+{name:'Cuántica',emoji:'⚛️',hue:270},
+{name:'Dimensional',emoji:'🌀',hue:300},
+{name:'Cósmica',emoji:'🌌',hue:330},
+{name:'Singularidad',emoji:'♾️',hue:355}
+ ];
+const CORE_SKILLS=[
+{id:'power',icon:'⚡',title:'Sobrecarga',desc:'+8% a toda la producción por rango.',max:5,base:1},
+{id:'buy',icon:'🏷️',title:'Compras eficientes',desc:'-4% al coste de máquinas por rango.',max:5,base:1},
+{id:'upgrade',icon:'🔧',title:'Ingeniería',desc:'-5% al coste de mejoras por rango.',max:4,base:1},
+{id:'offline',icon:'💤',title:'Turno nocturno',desc:'+12% a las ganancias offline por rango.',max:4,base:2},
+{id:'turbo',icon:'⚡',title:'Turbo extendido',desc:'+10 s al Turbo por rango.',max:3,base:2},
+{id:'automation',icon:'🤖',title:'Control industrial',desc:'-8% al intervalo de automatización por rango.',max:5,base:2}
+];
+const RARE_TYPES={
+ overcharged:{icon:'⚡',name:'Sobrecargada',mult:1.6,className:'rare-overcharged'},
+ golden:{icon:'✨',name:'Dorada',mult:2.5,className:'rare-golden'},
+ prototype:{icon:'💎',name:'Prototipo',mult:4,className:'rare-prototype'}
+};
+const RESEARCH_TIERS=[
+ {level:10,title:'Fundamentos industriales',a:{id:'logistics',icon:'📦',title:'Logística eficiente',desc:'-8% al coste de comprar máquinas.'},b:{id:'tuning',icon:'⚙️',title:'Ajuste de precisión',desc:'+12% a toda la producción.'}},
+ {level:20,title:'Control de calidad',a:{id:'quality',icon:'✨',title:'Control de calidad',desc:'+3 puntos porcentuales a la probabilidad de máquina rara.'},b:{id:'supplierNet',icon:'🚚',title:'Red de proveedores',desc:'El proveedor entrega máquinas +1 nivel.'}},
+ {level:30,title:'Operación continua',a:{id:'nightShift',icon:'🌙',title:'Turno nocturno',desc:'+50% a las ganancias offline.'},b:{id:'energyRecovery',icon:'⚡',title:'Recuperación energética',desc:'+15 segundos a cada Turbo.'}},
+ {level:40,title:'Materiales avanzados',a:{id:'rareAlloy',icon:'💎',title:'Aleación premium',desc:'+25% al multiplicador de todas las variantes raras.'},b:{id:'smartFusion',icon:'🤖',title:'Fusión inteligente',desc:'Automatizaciones de compra y fusión un 25% más rápidas.'}},
+ {level:50,title:'Economía avanzada',a:{id:'wholesale',icon:'🏷️',title:'Producción mayorista',desc:'-10% adicional al coste de mejoras.'},b:{id:'marketAI',icon:'📈',title:'IA de mercado',desc:'+15% a toda la producción.'}},
+ {level:75,title:'Tecnología de singularidad',a:{id:'prototypeLab',icon:'🧬',title:'Laboratorio prototipo',desc:'+0,7% de probabilidad directa de Prototipo.'},b:{id:'quantumStorage',icon:'🕳️',title:'Almacén cuántico',desc:'+4 horas al límite de ganancias offline.'}}
+];
+const COLLECTION_MILESTONES=[
+{level:10,coins:50,crate:1,bonus:.05,label:'50 monedas · 1 caja · +5% producción'},
+{level:25,coins:100,battery:1,magnet:1,bonus:.10,label:'100 monedas · batería · imán · +10%'},
+{level:50,coins:250,superBattery:1,crate:2,bonus:.20,label:'250 monedas · Super Batería · 2 cajas · +20%'},
+{level:75,coins:400,superBattery:2,bomb:3,bonus:.30,label:'400 monedas · 2 Super Baterías · 3 bombas · +30%'},
+{level:100,coins:1000,superBattery:4,crate:5,bomb:5,bonus:.50,label:'1000 monedas · 4 Super Baterías · 5 cajas · 5 bombas · +50%'}
+];
+const COLORS=['#eee4da','#ede0c8','#f2b179','#f59563','#f67c5f','#f65e3b','#edcf72','#edcc61','#edc850','#edc53f','#edc22e','#9f7aea','#7b61ff','#4b3f72'];
+const COLORS_NIGHT=['#595049','#62574d','#9a6e45','#9d6047','#9e5044','#9b4135','#907b45','#8d7938','#8b732f','#886b2a','#825f24','#66517f','#564591','#39304e'];
+let preferences={theme:'light',volume:70};
+function machineDef(level){return MACHINE_DEFS[Math.max(0,Math.min(MACHINE_DEFS.length-1,(level||1)-1))]||MACHINE_DEFS[0]}
+function machineEmoji(level){return machineDef(level).emoji||'⚙️'}
+function researchChoice(id){return !!(state.research&&Object.values(state.research).includes(id))}
+function researchCount(){return Object.keys(state.research||{}).filter(k=>state.research[k]).length}
+function researchForTier(i){return state.research&&state.research[i]!=null?state.research[i]:null}
+function researchProductionMult(){let m=1;if(researchChoice('tuning'))m*=1.12;if(researchChoice('marketAI'))m*=1.15;return m}
+function researchBuyMult(){return researchChoice('logistics')?0.92:1}
+function researchUpgradeMult(){return researchChoice('wholesale')?0.90:1}
+function researchOfflineMult(){return researchChoice('nightShift')?1.5:1}
+function researchOfflineCap(){return 14400+(researchChoice('quantumStorage')?14400:0)}
+function researchTurboBonus(){return researchChoice('energyRecovery')?15:0}
+function researchAutomationMult(){return researchChoice('smartFusion')?0.75:1}
+function rareBaseMult(type){return type&&RARE_TYPES[type]?RARE_TYPES[type].mult:1}
+function rareMult(type){let m=rareBaseMult(type);if(type&&researchChoice('rareAlloy'))m*=1.25;return m}
+function rareName(type){return type&&RARE_TYPES[type]?RARE_TYPES[type].name:''}
+function rareIcon(type){return type&&RARE_TYPES[type]?RARE_TYPES[type].icon:''}
+function rollRare(){const r=Math.random();const proto=.0035+(researchChoice('prototypeLab')?0.007:0);const gold=.015;const over=.03+(researchChoice('quality')?0.03:0);if(r<proto)return 'prototype';if(r<proto+gold)return 'golden';if(r<proto+gold+over)return 'overcharged';return null}
+function recordRare(type){if(!type)return;state.rareStats=state.rareStats||{found:0,overcharged:0,golden:0,prototype:0};state.rareStats.found=(state.rareStats.found||0)+1;state.rareStats[type]=(state.rareStats[type]||0)+1;trackEvent('rare_found',{type,total:state.rareStats.found})}
+function mergeResultRare(a,b){return a&&a===b?a:null}
+function rarePairSafe(a,b){return (a||null)===(b||null)}
+
+function coinSvg(size=18, cls=''){return `<svg class="coin-svg ${cls}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff3a6"/><stop offset="55%" stop-color="#f1c94b"/><stop offset="100%" stop-color="#c98712"/></linearGradient></defs><circle cx="32" cy="32" r="25" fill="url(#cg)" stroke="#9b6408" stroke-width="4"/><circle cx="32" cy="32" r="18" fill="none" stroke="#ffefb0" stroke-width="3" opacity=".8"/><path d="M22 23h20M22 41h20" stroke="#9b6408" stroke-width="3" opacity=".35"/><text x="32" y="38" text-anchor="middle" font-size="22" font-weight="900" fill="#8b5d08">M</text></svg>`}
+function questCoin(){return '<span aria-label="moneda" style="display:inline-grid;place-items:center;width:17px;height:17px;min-width:17px;border-radius:50%;background:linear-gradient(145deg,#fff0a0 0%,#efc13f 58%,#c98a16 100%);border:1.5px solid #956008;color:#744b05;font-family:Arial,sans-serif;font-size:9px;font-weight:900;line-height:1;vertical-align:-4px;box-shadow:inset 0 1px 0 #fff7bf,0 1px 1px #0002;margin-left:3px">M</span>'}
+function machineSvg(level,size=34){
+  const def=machineDef(level), fg=preferences.theme==='night'?'#f7efe6':'#fffdf8', accent=preferences.theme==='night'?'#241d17':'#5f5449', bg=tileColor(level);
+  const defs=`<defs><linearGradient id="bg${level}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,.28)"/><stop offset="100%" stop-color="rgba(0,0,0,.14)"/></linearGradient></defs>`;
+  function wrap(body){return `<svg class="machine-svg" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">${defs}<rect x="5" y="5" width="54" height="54" rx="18" fill="${bg}"/><rect x="5" y="5" width="54" height="54" rx="18" fill="url(#bg${level})"/><rect x="8" y="8" width="48" height="48" rx="15" fill="none" stroke="rgba(255,255,255,.25)"/><g fill="${fg}" stroke="${fg}" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`}
+  switch(def.icon){
+    case 'bolt': return wrap('<path d="M35 12 22 33h10l-4 19 16-22H34l1-18z" stroke="none"/>');
+    case 'nut': return wrap('<polygon points="24,14 40,14 50,24 50,40 40,50 24,50 14,40 14,24" fill="none" stroke-width="5"/><circle cx="32" cy="32" r="7" fill="none" stroke-width="5"/>');
+    case 'gear': return wrap('<circle cx="32" cy="32" r="9" fill="none" stroke-width="5"/><path d="M32 14v7M32 43v7M14 32h7M43 32h7M20 20l5 5M39 39l5 5M20 44l5-5M39 25l5-5" fill="none" stroke-width="4.5"/>');
+    case 'piston': return wrap('<rect x="18" y="14" width="28" height="12" rx="4" stroke="none"/><rect x="29" y="26" width="6" height="18" rx="2" stroke="none"/><rect x="22" y="44" width="20" height="7" rx="3" stroke="none"/>');
+    case 'belt': return wrap('<circle cx="21" cy="32" r="8" fill="none" stroke-width="4.5"/><circle cx="43" cy="32" r="8" fill="none" stroke-width="4.5"/><path d="M21 24h22M21 40h22" fill="none" stroke-width="4.5"/>');
+    case 'motor': return wrap('<rect x="16" y="19" width="24" height="22" rx="6" stroke="none"/><circle cx="45" cy="30" r="6" fill="none" stroke-width="4.5"/><path d="M20 16v-3M27 16v-3M34 16v-3" fill="none" stroke-width="3"/>');
+    case 'pump': return wrap('<rect x="18" y="19" width="18" height="20" rx="5" stroke="none"/><path d="M36 24h8v-5h6" fill="none" stroke-width="4.5"/><circle cx="27" cy="29" r="5" fill="none" stroke-width="4"/>');
+    case 'compressor': return wrap('<circle cx="23" cy="32" r="8" fill="none" stroke-width="4.5"/><rect x="34" y="22" width="12" height="20" rx="4" stroke="none"/><path d="M15 32h10" fill="none" stroke-width="4.5"/>');
+    case 'generator': return wrap('<circle cx="32" cy="32" r="12" fill="none" stroke-width="5"/><path d="M32 20v24M20 32h24M23 23l18 18M41 23 23 41" fill="none" stroke-width="3.5"/>');
+    case 'press': return wrap('<rect x="15" y="14" width="34" height="7" rx="3" stroke="none"/><rect x="27" y="21" width="10" height="15" rx="3" stroke="none"/><rect x="17" y="40" width="30" height="8" rx="3" stroke="none"/>');
+    case 'lathe': return wrap('<rect x="14" y="40" width="36" height="8" rx="3" stroke="none"/><circle cx="22" cy="29" r="7" fill="none" stroke-width="4.5"/><path d="M31 29h13" fill="none" stroke-width="4.5"/>');
+    case 'furnace': return wrap('<rect x="18" y="13" width="28" height="38" rx="8" stroke="none"/><path d="M32 24c4 5 5 8 5 11a5 5 0 1 1-10 0c0-3 1-6 5-11z" fill="'+accent+'" stroke="none"/>');
+    case 'welder': return wrap('<path d="M18 20h15l6 8-6 8H18z" stroke="none"/><path d="M39 28h8" fill="none" stroke-width="4.5"/><path d="M47 24l4 4-4 4" fill="none" stroke-width="3.5"/>');
+    case 'arm': return wrap('<circle cx="21" cy="18" r="5" stroke="none"/><path d="M21 24l10 8 8-6 7 6" fill="none" stroke-width="5"/><circle cx="47" cy="31" r="3.5" stroke="none"/><path d="M47 35v9" fill="none" stroke-width="5"/>');
+    case 'drone': return wrap('<rect x="25" y="25" width="14" height="14" rx="4" stroke="none"/><path d="M18 22l7 4M46 22l-7 4M18 42l7-4M46 42l-7-4" fill="none" stroke-width="3.5"/><circle cx="16" cy="20" r="4" fill="none" stroke-width="3.5"/><circle cx="48" cy="20" r="4" fill="none" stroke-width="3.5"/><circle cx="16" cy="44" r="4" fill="none" stroke-width="3.5"/><circle cx="48" cy="44" r="4" fill="none" stroke-width="3.5"/>');
+    case 'conveyor': return wrap('<rect x="14" y="25" width="36" height="12" rx="6" fill="none" stroke-width="4.5"/><circle cx="22" cy="31" r="3.5" stroke="none"/><circle cx="32" cy="31" r="3.5" stroke="none"/><circle cx="42" cy="31" r="3.5" stroke="none"/>');
+    case 'mech': return wrap('<circle cx="32" cy="17" r="5" stroke="none"/><rect x="24" y="24" width="16" height="15" rx="4" stroke="none"/><path d="M24 26l-7 8M40 26l7 8M27 39l-5 10M37 39l5 10" fill="none" stroke-width="4.5"/>');
+    case 'rover': return wrap('<rect x="18" y="25" width="20" height="10" rx="4" stroke="none"/><path d="M38 28h7l4 4" fill="none" stroke-width="4.5"/><circle cx="21" cy="42" r="4" stroke="none"/><circle cx="35" cy="42" r="4" stroke="none"/><circle cx="48" cy="42" r="4" stroke="none"/>');
+    case 'capsule': return wrap('<path d="M22 18a10 10 0 0 1 20 0v27H22z" stroke="none"/><path d="M22 31h20" fill="none" stroke="'+accent+'" stroke-width="3"/><circle cx="32" cy="26" r="3" fill="'+accent+'" stroke="none"/>');
+    case 'rocket': return wrap('<path d="M32 13c9 7 10 16 10 23L32 50 22 36c0-7 1-16 10-23z" stroke="none"/><circle cx="32" cy="25" r="4" fill="'+accent+'" stroke="none"/><path d="M22 36l-6 5M42 36l6 5" fill="none" stroke-width="4.5"/>');
+    case 'satellite': return wrap('<rect x="25" y="24" width="14" height="14" rx="3" stroke="none"/><rect x="11" y="22" width="9" height="18" rx="2" fill="none" stroke-width="4"/><rect x="44" y="22" width="9" height="18" rx="2" fill="none" stroke-width="4"/><path d="M32 15v9M32 39v9" fill="none" stroke-width="4.5"/>');
+    case 'reactor': return wrap('<circle cx="32" cy="32" r="6" stroke="none"/><path d="M32 18c7 0 12 5 12 12-5 0-10-2-15-5 0-4 1-7 3-7z" fill="none" stroke-width="4"/><path d="M20 26c4-6 12-8 18-4-2 4-7 8-13 10-3-2-5-4-5-6z" fill="none" stroke-width="4"/><path d="M22 42c-3-6-2-13 4-17 2 5 3 9 2 16-2 1-4 1-6 1z" fill="none" stroke-width="4"/>');
+    case 'android': return wrap('<rect x="22" y="18" width="20" height="17" rx="7" stroke="none"/><path d="M27 18l-3-5M37 18l3-5" fill="none" stroke-width="3.5"/><circle cx="28" cy="26" r="2" fill="'+accent+'" stroke="none"/><circle cx="36" cy="26" r="2" fill="'+accent+'" stroke="none"/><path d="M25 39v8M39 39v8M20 24v11M44 24v11" fill="none" stroke-width="4.5"/>');
+    case 'core': return wrap('<circle cx="32" cy="32" r="12" fill="none" stroke-width="5"/><circle cx="32" cy="32" r="5" stroke="none"/><path d="M32 16v6M32 42v6M16 32h6M42 32h6" fill="none" stroke-width="4.5"/>');
+    case 'forge': return wrap('<path d="M18 23h28v23H18z" stroke="none"/><path d="M32 26c4 5 5 9 5 12a5 5 0 1 1-10 0c0-3 1-7 5-12z" fill="'+accent+'" stroke="none"/>');
+    case 'foundry': return wrap('<rect x="16" y="20" width="32" height="22" rx="6" stroke="none"/><path d="M20 20v-7h24v7" fill="none" stroke-width="4.5"/><path d="M24 31h16" fill="none" stroke="'+accent+'" stroke-width="3"/>');
+    case 'astrobot': return wrap('<circle cx="32" cy="17" r="5" stroke="none"/><rect x="23" y="24" width="18" height="13" rx="4" stroke="none"/><path d="M23 31l-7 4M41 31l7 4M27 37l-4 9M37 37l4 9" fill="none" stroke-width="4.5"/>');
+    case 'cruiser': return wrap('<path d="M12 36h40l-8 7H20z" stroke="none"/><path d="M21 36l6-8h10l6 8" stroke="none"/>');
+    case 'portal': return wrap('<ellipse cx="32" cy="32" rx="14" ry="20" fill="none" stroke-width="5"/><ellipse cx="32" cy="32" rx="7" ry="12" fill="none" stroke-width="3.5" opacity=".7"/>');
+    case 'singularity': return wrap('<circle cx="32" cy="32" r="7" stroke="none"/><circle cx="32" cy="32" r="18" fill="none" stroke-width="3.5" stroke-dasharray="4 5"/><circle cx="19" cy="25" r="2.5" stroke="none"/><circle cx="45" cy="40" r="2.5" stroke="none"/>');
+    case 'nanoforge': return wrap('<rect x="19" y="19" width="26" height="26" fill="none" stroke-width="4.5"/><path d="M19 32h26M32 19v26" fill="none" stroke-width="3"/><circle cx="32" cy="32" r="4.5" stroke="none"/>');
+    case 'hyperloop': return wrap('<rect x="12" y="26" width="40" height="12" rx="6" fill="none" stroke-width="4.5"/><path d="M18 32h20" fill="none" stroke-width="3.5" stroke-dasharray="4 4"/><circle cx="43" cy="32" r="3.5" stroke="none"/>');
+    case 'orb': return wrap('<circle cx="32" cy="32" r="16" stroke="none" opacity=".95"/><ellipse cx="32" cy="28" rx="12" ry="5" fill="none" stroke="'+accent+'" stroke-width="3" opacity=".35"/>');
+    case 'quantum': return wrap('<circle cx="32" cy="32" r="5" stroke="none"/><ellipse cx="32" cy="32" rx="16" ry="6" fill="none" stroke-width="3.5"/><ellipse cx="32" cy="32" rx="16" ry="6" transform="rotate(60 32 32)" fill="none" stroke-width="3.5"/><ellipse cx="32" cy="32" rx="16" ry="6" transform="rotate(-60 32 32)" fill="none" stroke-width="3.5"/>');
+    case 'helix': return wrap('<path d="M21 16c10 0 10 10 22 10M21 48c10 0 10-10 22-10" fill="none" stroke-width="4.5"/><path d="M21 16c0 17 22 17 22 32M43 16c0 17-22 17-22 32" fill="none" stroke-width="2.8"/>');
+    case 'titan': return wrap('<circle cx="32" cy="16" r="6" stroke="none"/><rect x="22" y="23" width="20" height="15" rx="5" stroke="none"/><path d="M22 27l-8 9M42 27l8 9M27 38l-5 12M37 38l5 12" fill="none" stroke-width="5"/>');
+    case 'aether': return wrap('<path d="M32 12 39 24 52 26 43 35 45 49 32 42 19 49 21 35 12 26 25 24z" stroke="none"/>');
+    case 'nova': return wrap('<circle cx="32" cy="32" r="6" stroke="none"/><path d="M32 14v10M32 40v10M14 32h10M40 32h10M19 19l7 7M38 38l7 7M19 45l7-7M38 26l7-7" fill="none" stroke-width="4.5"/>');
+    case 'omega': return wrap('<path d="M22 44h20M24 44v-4c-4-3-6-7-6-12 0-8 6-14 14-14s14 6 14 14c0 5-2 9-6 12v4" fill="none" stroke-width="5"/>');
+    case 'eclipse': return wrap('<circle cx="29" cy="32" r="15" stroke="none"/><circle cx="37" cy="28" r="15" fill="'+accent+'" stroke="none" opacity=".88"/>');
+    default: return wrap('<circle cx="32" cy="32" r="12" stroke="none"/>');
+  }
+}
+function eraIndex(level){return Math.max(0,Math.min(ERAS.length-1,Math.floor((Math.max(1,level)-1)/10)))}
+function eraFor(level){return ERAS[eraIndex(level)]}
+function tileColor(level){const e=eraFor(level),step=(Math.max(1,level)-1)%10;const sat=preferences.theme==='night'?42:62;const light=preferences.theme==='night'?(42-step*.9):(74-step*1.65);return `hsl(${e.hue} ${sat}% ${light}%)`}
+const SIZE=25, QUEST_TYPES=['machine','merge','buy','earn','upgrade'];
+const COIN_PACKS={coins_100:{coins:100,price:0.99},coins_550:{coins:550,price:4.99},coins_1200:{coins:1200,price:9.99}};
+const DAILY_REWARDS=[
+{icon:'coin',name:'25 monedas',desc:'+25 monedas premium',apply:()=>state.coins+=25},
+{icon:'📦',name:'1 caja premium',desc:'Consigues una caja premium',apply:()=>state.consumables.crate=(state.consumables.crate||0)+1},
+{icon:'🔋',name:'1 batería industrial',desc:'Consigues una batería de 5 min',apply:()=>state.consumables.battery=(state.consumables.battery||0)+1},
+{icon:'coin',name:'50 monedas',desc:'+50 monedas premium',apply:()=>state.coins+=50},
+{icon:'🧲',name:'1 imán de fusión',desc:'Fusiona pares automáticamente',apply:()=>state.consumables.magnet=(state.consumables.magnet||0)+1},
+{icon:'💣',name:'1 bomba',desc:'Elimina una máquina del tablero',apply:()=>state.consumables.bomb=(state.consumables.bomb||0)+1},
+{icon:'🔋⚡',name:'1 Super Batería',desc:'x2 producción durante 12 horas',apply:()=>state.consumables.superBattery=(state.consumables.superBattery||0)+1}
+];
+const TUTORIAL_STEPS=[
+{title:'Compra máquinas',body:'Usa el botón de comprar para llenar huecos del tablero con nuevas máquinas.',art:'➕ → casilla vacía'},
+{title:'Fusiona dos iguales',body:'Toca una máquina y después otra del mismo nivel para fusionarlas y crear una mejor.',art:'N1 + N1 = N2'},
+{title:'Mejora y prestigia',body:'Las mejoras aceleran la producción. Cuando llegues lejos, prestigia para conseguir Núcleos permanentes.',art:'🏭 → 💎 → x producción'},
+{title:'Automatiza tu fábrica',body:'Los Núcleos desbloquean automatizaciones comprables para que tu fábrica funcione sola.',art:'🤖 compra · fusiona · reclama'}
+];
+const DAILY_MISSION_TYPES=['buy','merge','earn','upgrade','machine'];
+const GRAND_DAILY_REWARD={coins:500,superBattery:2,crate:3,bomb:5};
+const ERA_REWARDS=[null,{coins:50,crate:1},{coins:75,crate:1},{coins:100,battery:1},{coins:125,magnet:1},{coins:150,crate:2},{coins:200,superBattery:1},{coins:250,bomb:2},{coins:350,superBattery:1,crate:2},{coins:500,superBattery:2,crate:3}];
+const ACHIEVEMENTS=[
+{id:'merge100',icon:'🔗',title:'Cadena de montaje',desc:'Haz 100 fusiones',reward:'40 monedas',ready:s=>s.lifetime.merges>=100,apply:s=>s.coins+=40},
+{id:'merge1000',icon:'⚙️',title:'Fábrica incansable',desc:'Haz 1.000 fusiones',reward:'150 monedas + 1 imán',ready:s=>s.lifetime.merges>=1000,apply:s=>{s.coins+=150;s.consumables.magnet++}},
+{id:'buy250',icon:'➕',title:'Producción en masa',desc:'Compra 250 máquinas',reward:'75 monedas + 1 caja',ready:s=>s.lifetime.bought>=250,apply:s=>{s.coins+=75;s.consumables.crate++}},
+{id:'earn1m',icon:'💰',title:'Primer millón',desc:'Produce $1M en total',reward:'100 monedas + 1 batería',ready:s=>s.lifetime.earned>=1e6,apply:s=>{s.coins+=100;s.consumables.battery++}},
+{id:'level25',icon:'🧪',title:'Segunda revolución',desc:'Descubre N25',reward:'100 monedas + 1 caja',ready:s=>s.lifetime.maxLevel>=25,apply:s=>{s.coins+=100;s.consumables.crate++}},
+{id:'level50',icon:'🚀',title:'Mitad del universo',desc:'Descubre N50',reward:'250 monedas + Super Batería',ready:s=>s.lifetime.maxLevel>=50,apply:s=>{s.coins+=250;s.consumables.superBattery++}},
+{id:'prestige3',icon:'💎',title:'Renacer industrial',desc:'Haz 3 prestigios',reward:'150 monedas + batería',ready:s=>s.lifetime.prestiges>=3,apply:s=>{s.coins+=150;s.consumables.battery++}},
+{id:'orders50',icon:'📋',title:'Proveedor de confianza',desc:'Completa 50 pedidos',reward:'150 monedas + 2 bombas',ready:s=>s.lifetime.orders>=50,apply:s=>{s.coins+=150;s.consumables.bomb+=2}},
+{id:'daily7',icon:'🔥',title:'Una semana perfecta',desc:'Completa 7 días de misiones',reward:'200 monedas + Super Batería',ready:s=>s.lifetime.dailyDays>=7,apply:s=>{s.coins+=200;s.consumables.superBattery++}},
+{id:'level100',icon:'🏆',title:'Dueño de la Singularidad',desc:'Descubre N100',reward:'1.500 monedas + 3 Super Baterías',ready:s=>s.lifetime.maxLevel>=100,apply:s=>{s.coins+=1500;s.consumables.superBattery+=3}}
+];
+let state={money:25,totalEarned:0,produced:0,cells:Array(SIZE).fill(0),rareCells:Array(SIZE).fill(null),speed:0,supplier:1,market:0,cores:0,coins:0,merges:0,maxLevel:1,quests:[],dailyMissions:[],turboUntil:0,batteryUntil:0,buyCount:0,upgradeCount:0,ordersDone:0,consumables:{battery:2,crate:1,magnet:1,warp:1,bomb:1,superBattery:0},superBatteryUntil:0,automation:{autoBuy:true,autoMerge:true,autoClaim:true,autoClean:true,mergePriority:'low',reservePct:0},automationOwned:{autoBuy:false,autoMerge:false,autoClaim:false,autoClean:false},discovered:{1:true},collectionMilestones:{},eraRewards:{},achievements:{},coreSkills:{power:0,buy:0,upgrade:0,offline:0,turbo:0,automation:0},research:{},rareStats:{found:0,overcharged:0,golden:0,prototype:0},lifetime:{merges:0,bought:0,earned:0,upgrades:0,prestiges:0,orders:0,dailyDays:0,maxLevel:1,playSeconds:0,startedAt:Date.now(),firstReached:{}},daily:{lastDay:'',lastTs:0,streak:0},dailyMissionMeta:{day:'',streak:0,lastCompleteDay:'',grandReady:false},pendingOffline:0,tutorialDone:true,last:Date.now(),saveVersion:16};
+let selected=-1,audioCtx=null,gamePaused=false,lastQuestCheck=0,toolMode=null;
+let autoNextRun={buy:0,merge:0,clean:0};
+const nf=n=>{if(!Number.isFinite(n))return '$∞';if(n<1000)return '$'+Math.floor(n);const u=['K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid'];let i=-1;while(n>=1000&&i<u.length-1){n/=1000;i++;}return '$'+n.toFixed(n>=100?0:n>=10?1:2)+u[i]};
+const num=n=>n>=1000?nf(n).slice(1):Math.floor(n).toLocaleString('es-ES');
+function baseRate(l){return Math.pow(1.92,l-1)*(1+l*.11)}
+function boostMult(){let m=1,now=Date.now();if(now<state.turboUntil)m*=2;if(now<state.batteryUntil)m*=2;if(now<state.superBatteryUntil)m*=2;return m}
+function coreBonus(){return state.cores<=0?0:0.25*(Math.pow(2,state.cores)-1)}
+function nextCoreBonus(){return 0.25*Math.pow(2,state.cores)}
+function coreMult(){return 1+coreBonus()}
+function skillRank(id){return Math.max(0,Number(state.coreSkills&&state.coreSkills[id])||0)}
+function coreSkillSpent(){let spent=0;for(const d of CORE_SKILLS){const r=Math.min(d.max,skillRank(d.id));spent+=r*d.base+(r*(r-1))/2;}return spent}
+function freeCores(){return Math.max(0,state.cores-coreSkillSpent())}
+function coreSkillCost(d){return d.base+skillRank(d.id)}
+function skillProductionMult(){return 1+skillRank('power')*.08}
+function collectionBonus(){return COLLECTION_MILESTONES.reduce((a,m)=>a+(state.collectionMilestones&&state.collectionMilestones[m.level]?m.bonus:0),0)}
+function totalMult(){return (1+state.speed*.2)*(1+state.market*.15)*coreMult()*boostMult()*(1+collectionBonus())*skillProductionMult()*researchProductionMult()}
+function rateFor(l){return baseRate(l)*totalMult()}
+function rateForCell(i){const l=state.cells[i];return l?rateFor(l)*rareMult(state.rareCells&&state.rareCells[i]):0}
+function income(){let sum=0;for(let i=0;i<SIZE;i++)sum+=rateForCell(i);return sum}
+function buyCost(){const discount=Math.max(.65,1-skillRank('buy')*.04);return Math.floor(10*Math.pow(1.165,state.buyCount)*discount*researchBuyMult())}
+function upgradeCost(kind){const lv=kind==='supplier'?Math.max(0,state.supplier-1):state[kind];const base={speed:80,supplier:220,market:150}[kind];const discount=Math.max(.65,1-skillRank('upgrade')*.05);return Math.floor(base*Math.pow(1.92,lv)*discount*researchUpgradeMult())}
+function coreRequirement(){return 20000*Math.pow(2.6,state.cores)}
+function maxSupplierLevel(){return Math.min(MACHINE_DEFS.length,6+state.cores*5)}
+function supplierLevel(){return Math.min(state.supplier+(researchChoice('supplierNet')?1:0),maxSupplierLevel())}
+function autoUnlocked(k){const need={autoBuy:1,autoMerge:2,autoClaim:5,autoClean:6}[k]||99;return state.cores>=need}
+const AUTO_COSTS={autoBuy:18000,autoMerge:75000,autoClaim:500000,autoClean:1400000};
+function autoOwned(k){return !!(state.automationOwned&&state.automationOwned[k])}
+function autoActive(k){return autoUnlocked(k)&&autoOwned(k)&&!!state.automation[k]}
+function buyAutomation(k){if(!autoUnlocked(k)||autoOwned(k))return false;const cost=AUTO_COSTS[k]||0;if(state.money<cost){toast('Necesitas '+nf(cost)+' para instalarlo');tone(170,.05);return false;}state.money-=cost;state.automationOwned[k]=true;state.automation[k]=true;autoNextRun={buy:0,merge:0,clean:0};toast('🤖 Automatización instalada permanentemente');tone(620,.08);save();updateUI();return true}
+function automationSkillMult(){return Math.max(.45,(1-skillRank('automation')*.08)*researchAutomationMult())}
+function autoBuyInterval(){return Math.max(700,(state.cores>=10?2000:state.cores>=6?4000:state.cores>=3?8000:15000)*automationSkillMult())}
+function autoMergeInterval(){return Math.max(500,(state.cores>=10?1000:state.cores>=7?2000:state.cores>=4?5000:10000)*automationSkillMult())}
+function nextAutomationUnlock(){const list=[[1,'Auto-compra'],[2,'Auto-fusión'],[3,'Auto-compra más rápida'],[4,'Auto-fusión más rápida'],[5,'Auto-reclamo'],[6,'Auto-limpieza'],[7,'Auto-fusión 2 s'],[8,'Prioridades avanzadas'],[10,'Fábrica autónoma máxima']];return list.find(([n])=>state.cores<n)||null}
+function autoReserveAmount(){if(state.cores<8)return 0;return state.money*Math.max(0,Math.min(.5,Number(state.automation.reservePct)||0))}
+function questReward(type,target){const base={machine:120,merge:55,buy:70,earn:0.28,upgrade:250}[type];if(type==='machine')return Math.floor(base*Math.pow(2.05,target-2));if(type==='earn')return Math.max(100,Math.floor(target*base));return Math.max(100,Math.floor(base*target*(1+state.cores*.2)))}
+function questProgress(q){if(q.type==='machine')return q.done?1:0;if(q.type==='merge')return Math.max(0,state.merges-q.start);if(q.type==='buy')return Math.max(0,state.buyCount-q.start);if(q.type==='earn')return Math.max(0,state.produced-q.start);if(q.type==='upgrade')return Math.max(0,state.upgradeCount-q.start);return 0}
+function questGoal(q){return q.type==='machine'?1:q.target}
+function makeQuest(type){if(!type)type=QUEST_TYPES[Math.floor(Math.random()*QUEST_TYPES.length)];let target=1,start=0;
+ if(type==='machine'){const ceiling=Math.min(MACHINE_DEFS.length,Math.max(2,state.maxLevel+1,supplierLevel()+1));target=Math.max(2,ceiling-(Math.random()<.25?1:0));}
+ if(type==='merge'){target=5+Math.floor(Math.random()*6)+state.cores*2;start=state.merges;}
+ if(type==='buy'){target=4+Math.floor(Math.random()*7)+state.cores;start=state.buyCount;}
+ if(type==='earn'){target=Math.max(300,Math.floor(Math.max(income()*75,buyCost()*7)*(1+Math.random()*.8)));start=state.produced;}
+ if(type==='upgrade'){target=1+Math.floor(Math.random()*3);start=state.upgradeCount;}
+ const coins=2+Math.floor(Math.random()*4)+Math.min(3,state.cores);
+ const bonusRoll=Math.random(),battery=bonusRoll<.24?1:0,bomb=bonusRoll>=.24&&bonusRoll<.40?1:0;
+ return {id:Date.now()+Math.random(),type,target,start,done:false,reward:questReward(type,target),coins,battery,bomb};}
+function ensureQuests(){if(!Array.isArray(state.quests))state.quests=[];while(state.quests.length<3){const used=new Set(state.quests.map(q=>q.type));const choices=QUEST_TYPES.filter(t=>!used.has(t));state.quests.push(makeQuest(choices.length?choices[Math.floor(Math.random()*choices.length)]:null));}}
+function questText(q){if(q.type==='machine')return `Crea una máquina N${q.target}`;if(q.type==='merge')return `Haz ${q.target} fusiones`;if(q.type==='buy')return `Compra ${q.target} máquinas`;if(q.type==='earn')return `Produce ${nf(q.target)}`;if(q.type==='upgrade')return `Compra ${q.target} mejoras`;return 'Pedido';}
+function questProgressText(q,p){if(q.type==='machine')return q.done?'1 / 1':'0 / 1';if(q.type==='earn')return `${nf(Math.min(p,q.target))} / ${nf(q.target)}`;return `${Math.floor(Math.min(p,q.target))} / ${q.target}`;}
+function renderQuests(){const box=$('#ordersList');const ids=state.quests.map(q=>String(q.id));const current=[...box.children].map(e=>e.dataset.id);if(ids.join('|')!==current.join('|')){box.innerHTML='';state.quests.forEach((q,idx)=>{const el=document.createElement('div');el.className='quest';el.dataset.id=String(q.id);el.innerHTML='<div class="quest-head"><div class="quest-title"></div><div class="quest-reward"></div></div><div class="quest-meta"><span class="quest-progress"></span><span class="quest-kind"></span></div><div class="bar"><i></i></div><button class="quest-claim">RECLAMAR</button>';el.querySelector('.quest-claim').onclick=()=>claimQuestById(q.id);box.appendChild(el);});}state.quests.forEach((q,i)=>{const el=box.children[i],p=questProgress(q),goal=questGoal(q),pct=Math.min(100,(p/goal)*100);el.querySelector('.quest-title').textContent=questText(q);el.querySelector('.quest-reward').innerHTML=`+${nf(q.reward)} · +${q.coins} ${questCoin()}${q.battery?' · 🔋':''}${q.bomb?' · 💣':''}`;el.querySelector('.quest-progress').textContent=q.ready?'✅ COMPLETADO':questProgressText(q,p);el.querySelector('.quest-kind').textContent=q.type==='machine'?'CREACIÓN':q.type.toUpperCase();el.querySelector('.bar>i').style.width=pct+'%';const btn=el.querySelector('.quest-claim');btn.style.display=q.ready&&!autoActive('autoClaim')?'block':'none';btn.disabled=!q.ready;});}
+function dailyMissionBase(mult=1){return Math.max(4000,Math.floor(coreRequirement()*0.1*mult));}
+function makeDailyMission(type){if(!type)type=DAILY_MISSION_TYPES[Math.floor(Math.random()*DAILY_MISSION_TYPES.length)];let target=0,start=0;switch(type){case 'buy':target=10+Math.floor(Math.random()*10);start=state.lifetime.bought;break;case 'merge':target=8+Math.floor(Math.random()*8);start=state.lifetime.merges;break;case 'earn':target=Math.max(25000,Math.floor(coreRequirement()*(0.18+Math.random()*0.12)));start=state.lifetime.earned;break;case 'upgrade':target=5+Math.floor(Math.random()*5);start=state.lifetime.upgrades;break;case 'machine':target=Math.min(MACHINE_DEFS.length,Math.max(4,state.lifetime.maxLevel+1,supplierLevel()+Math.floor(Math.random()*3)));break;}const mult={buy:1,merge:1.15,earn:1.4,upgrade:1.2,machine:1.35}[type]||1;return{id:'d'+Date.now()+Math.random(),type,target,start,reward:dailyMissionBase(mult),coins:12+Math.floor(Math.random()*12),claimed:false};}
+function ensureDailyMissions(){const today=todayKey();state.dailyMissionMeta=state.dailyMissionMeta||{day:'',streak:0,lastCompleteDay:'',grandReady:false};if(!Array.isArray(state.dailyMissions))state.dailyMissions=[];if(state.dailyMissionMeta.lastCompleteDay){const diff=Math.round((new Date(today)-new Date(state.dailyMissionMeta.lastCompleteDay))/86400000);if(diff>1&&!state.dailyMissionMeta.grandReady)state.dailyMissionMeta.streak=0;}if(state.dailyMissionMeta.day!==today||state.dailyMissions.length!==3){state.dailyMissionMeta.day=today;const pool=[...DAILY_MISSION_TYPES].sort(()=>Math.random()-.5).slice(0,3);state.dailyMissions=pool.map(type=>makeDailyMission(type));save();}}
+function dailyMissionProgress(m){switch(m.type){case 'buy':return Math.max(0,state.lifetime.bought-(m.start||0));case 'merge':return Math.max(0,state.lifetime.merges-(m.start||0));case 'earn':return Math.max(0,Math.floor(state.lifetime.earned-(m.start||0)));case 'upgrade':return Math.max(0,state.lifetime.upgrades-(m.start||0));case 'machine':return state.lifetime.maxLevel;default:return 0;}}
+function dailyMissionText(m){switch(m.type){case 'buy':return `Compra ${m.target} máquinas`;case 'merge':return `Haz ${m.target} fusiones`;case 'earn':return `Produce ${nf(m.target)}`;case 'upgrade':return `Haz ${m.target} mejoras`;case 'machine':return `Alcanza una máquina N${m.target}`;default:return 'Misión';}}
+function renderDailyMissions(){ensureDailyMissions();const box=$('#dailyMissionsList');if(!box)return;const ids=state.dailyMissions.map(m=>String(m.id));const current=[...box.children].map(e=>e.dataset.id);if(ids.join('|')!==current.join('|')){box.innerHTML='';state.dailyMissions.forEach(m=>{const el=document.createElement('div');el.className='quest daily';el.dataset.id=String(m.id);el.innerHTML='<div class="quest-head"><div class="quest-title"></div><div class="quest-reward"></div></div><div class="quest-meta"><span class="quest-progress"></span><span class="quest-kind">DIARIA</span></div><div class="bar"><i></i></div><button class="quest-claim">RECLAMAR</button>';el.querySelector('.quest-claim').onclick=()=>claimDailyMissionById(m.id);box.appendChild(el);});}state.dailyMissions.forEach((m,i)=>{const el=box.children[i],p=dailyMissionProgress(m),goal=m.target,pct=Math.min(100,(p/goal)*100),ready=p>=goal;el.querySelector('.quest-title').textContent=dailyMissionText(m);el.querySelector('.quest-reward').innerHTML=`+${nf(m.reward)} · +${m.coins} ${questCoin()}`;el.querySelector('.quest-progress').textContent=m.claimed?'✅ RECLAMADA':(ready?`✅ LISTA (${goal}/${goal})`:`${m.type==='earn'?nf(p):p}/${goal}`);el.querySelector('.bar>i').style.width=pct+'%';el.classList.toggle('complete',m.claimed);const btn=el.querySelector('.quest-claim');btn.style.display=m.claimed?'none':'block';btn.disabled=!ready;});const streak=state.dailyMissionMeta.streak||0;$('#dailyMissionStreak').textContent=`Racha ${Math.min(streak,14)}/14`;renderDailyMissionTrack();$('#claimGrandDailyReward').style.display=state.dailyMissionMeta.grandReady?'block':'none';}
+function renderDailyMissionTrack(){const box=$('#dailyMissionTrack');if(!box)return;const streak=state.dailyMissionMeta&&state.dailyMissionMeta.grandReady?14:Math.min(14,state.dailyMissionMeta&&state.dailyMissionMeta.streak||0);const sig=streak+'|'+!!(state.dailyMissionMeta&&state.dailyMissionMeta.grandReady);if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML='';for(let i=1;i<=14;i++){const d=document.createElement('div');d.className='streak-day'+(i<=streak?' done':i===streak+1?' next':'')+(i===14?' grand':'');d.textContent=i===14?'🏆':i;d.title='Día '+i;box.appendChild(d);}}
+function claimDailyMissionById(id){const i=state.dailyMissions.findIndex(m=>String(m.id)===String(id));if(i>=0)claimDailyMission(i);}
+function claimDailyMission(i){const m=state.dailyMissions[i];if(!m||m.claimed)return false;const ready=dailyMissionProgress(m)>=m.target;if(!ready)return false;m.claimed=true;state.money+=m.reward;state.totalEarned+=m.reward;state.coins+=m.coins;toast(`Misión diaria: +${nf(m.reward)} +${m.coins} monedas`);tone(680,.08);if(state.dailyMissions.every(x=>x.claimed))completeDailyMissionDay();save();updateUI();return true;}
+function completeDailyMissionDay(){const today=todayKey();const meta=state.dailyMissionMeta; if(meta.lastCompleteDay===today) return; let next=1; if(meta.lastCompleteDay){const prev=new Date(meta.lastCompleteDay),cur=new Date(today);const diff=Math.round((cur-prev)/86400000);next=diff===1?(meta.streak||0)+1:1;} meta.streak=next; meta.lastCompleteDay=today; state.lifetime.dailyDays=(state.lifetime.dailyDays||0)+1; if(meta.streak>=14) meta.grandReady=true; toast(meta.grandReady?'🏆 ¡Premio de 14 días listo!':'🔥 Racha diaria: '+meta.streak+'/14');}
+function claimGrandDailyReward(){const meta=state.dailyMissionMeta;if(!meta||!meta.grandReady)return;state.coins+=GRAND_DAILY_REWARD.coins;state.consumables.superBattery+=GRAND_DAILY_REWARD.superBattery;state.consumables.crate+=GRAND_DAILY_REWARD.crate;state.consumables.bomb+=GRAND_DAILY_REWARD.bomb;meta.grandReady=false;meta.streak=0;meta.lastCompleteDay='';toast('🏆 Premio 14 días cobrado');tone(920,.12);save();updateUI();}
+
+function renderCoreSkills(){const box=$('#coreSkillList');if(!box)return;state.coreSkills=state.coreSkills||{};$('#freeCores').textContent=freeCores();const sig=CORE_SKILLS.map(d=>d.id+':'+skillRank(d.id)).join('|')+'|'+state.cores;if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML='';for(const d of CORE_SKILLS){const r=skillRank(d.id),cost=coreSkillCost(d),maxed=r>=d.max,can=!maxed&&freeCores()>=cost;const row=document.createElement('div');row.className='core-skill'+(maxed?' maxed':'');row.innerHTML=`<div class="core-skill-top"><div class="core-skill-title">${d.icon} ${d.title}</div><span class="core-skill-rank">${r}/${d.max}</span></div><small>${d.desc}</small><button class="mini ${can?'can':''}" ${can?'':'disabled'}>${maxed?'MÁXIMO':`MEJORAR · ${cost} 💎`}</button>`;if(can)row.querySelector('button').onclick=()=>buyCoreSkill(d.id);box.appendChild(row);}}
+
+function renderResearch(){const box=$('#researchList');if(!box)return;state.research=state.research||{};const sig=JSON.stringify(state.research)+'|'+(state.lifetime&&state.lifetime.maxLevel||state.maxLevel||1);if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML='';$('#researchCount').textContent=`${researchCount()} / ${RESEARCH_TIERS.length}`;RESEARCH_TIERS.forEach((tier,idx)=>{const unlocked=(state.lifetime.maxLevel||state.maxLevel||1)>=tier.level,chosen=researchForTier(idx);const row=document.createElement('div');row.className='research-tier'+(unlocked?'':' locked');const choice=(opt,key)=>{const selected=chosen===opt.id,rejected=chosen&&chosen!==opt.id;return `<div class="research-option${selected?' selected':''}${rejected?' rejected':''}"><strong>${opt.icon} ${opt.title}</strong><small>${opt.desc}</small><button class="mini" data-tier="${idx}" data-choice="${key}" ${(!unlocked||chosen)?'disabled':''}>${selected?'ELEGIDA':rejected?'BLOQ.':unlocked?'INVESTIGAR':'N'+tier.level}</button></div>`};row.innerHTML=`<div class="research-tier-head"><b>🔬 ${tier.title}</b><span>${unlocked?'DESBLOQUEADA':'REQUIERE N'+tier.level}</span></div><div class="research-options">${choice(tier.a,'a')}${choice(tier.b,'b')}</div>${unlocked&&!chosen?'<div class="research-warning">La elección es permanente: la otra tecnología quedará bloqueada.</div>':''}`;row.querySelectorAll('button[data-choice]').forEach(btn=>btn.onclick=()=>chooseResearch(Number(btn.dataset.tier),btn.dataset.choice));box.appendChild(row);});}
+let pendingResearch=null;
+function chooseResearch(tierIndex,key){const tier=RESEARCH_TIERS[tierIndex];if(!tier||researchForTier(tierIndex)!=null||(state.lifetime.maxLevel||state.maxLevel||1)<tier.level)return;const opt=tier[key];if(!opt)return;const sig=tierIndex+':'+key;if(!pendingResearch||pendingResearch.sig!==sig||Date.now()-pendingResearch.ts>2500){pendingResearch={sig,ts:Date.now()};toast(`🔬 ${opt.title}: toca otra vez para confirmar`);tone(420,.05);return;}pendingResearch=null;state.research=state.research||{};state.research[tierIndex]=opt.id;trackEvent('research_completed',{tier:tierIndex,level:tier.level,choice:opt.id});toast(`🔬 Investigación completada: ${opt.title}`);tone(760,.09);save();renderResearch();redrawAll(false);updateUI();}
+function buyCoreSkill(id){const d=CORE_SKILLS.find(x=>x.id===id);if(!d)return;state.coreSkills=state.coreSkills||{};const r=skillRank(id),cost=coreSkillCost(d);if(r>=d.max||freeCores()<cost)return;state.coreSkills[id]=r+1;toast(`${d.icon} ${d.title} · rango ${r+1}`);tone(760,.08);save();updateUI();}
+function syncEraVisual(){const level=Math.max(1,state.lifetime&&state.lifetime.maxLevel||state.maxLevel||1),idx=eraIndex(level),e=ERAS[idx],g=$('#game');if(!g)return;g.classList.add('era-themed');g.style.setProperty('--era-hue',e.hue);const inEra=((level-1)%10)+1,pct=level>=100?100:Math.min(100,inEra*10);$('#eraProgressLabel').textContent=`${e.emoji} Era ${idx+1} · ${e.name}`;$('#eraProgressNext').textContent=level>=100?'N100 · MÁXIMO':`N${level} / N${(idx+1)*10}`;$('#eraProgressFill').style.width=pct+'%';$('#eraProgressHint').textContent=level>=100?'🏆 Has alcanzado la máquina máxima':`Siguiente era: ${ERAS[Math.min(ERAS.length-1,idx+1)].emoji} ${ERAS[Math.min(ERAS.length-1,idx+1)].name} en N${idx*10+11}`;}
+function mergeTravel(from,to,level){const a=cellNodes[from],b=cellNodes[to];if(!a||!b)return;const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect(),fly=document.createElement('div');fly.className='merge-fly';fly.textContent=machineEmoji(level);fly.style.left=(ar.left+ar.width/2-18)+'px';fly.style.top=(ar.top+ar.height/2-18)+'px';document.body.appendChild(fly);const dx=(br.left+br.width/2)-(ar.left+ar.width/2),dy=(br.top+br.height/2)-(ar.top+ar.height/2);fly.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.45)`,opacity:.25}],{duration:230,easing:'cubic-bezier(.2,.8,.2,1)'}).finished.finally(()=>fly.remove());b.classList.remove('merge-impact');void b.offsetWidth;b.classList.add('merge-impact');setTimeout(()=>b.classList.remove('merge-impact'),360);}
+function achievementReady(a){try{return !!a.ready(state)}catch(e){return false}}
+function renderAchievements(){const box=$('#achievementList');if(!box)return;state.achievements=state.achievements||{};const sig=ACHIEVEMENTS.map(a=>a.id+':' +(state.achievements[a.id]?'c':achievementReady(a)?'r':'l')).join('|');if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML='';let claimed=0;for(const a of ACHIEVEMENTS){const isClaimed=!!state.achievements[a.id],ready=achievementReady(a);if(isClaimed)claimed++;const row=document.createElement('div');row.className='achievement-row'+(ready&&!isClaimed?' ready':'')+(isClaimed?' claimed':'');row.innerHTML=`<div class="achievement-icon">${a.icon}</div><div class="achievement-copy"><b>${a.title}</b><small>${a.desc} · ${a.reward}</small></div><button class="mini" ${ready&&!isClaimed?'':'disabled'}>${isClaimed?'COBRADO':ready?'COBRAR':'BLOQ.'}</button>`;if(ready&&!isClaimed)row.querySelector('button').onclick=()=>claimAchievement(a.id);box.appendChild(row);}$('#achievementCount').textContent=`${claimed} / ${ACHIEVEMENTS.length}`;}
+function claimAchievement(id){const a=ACHIEVEMENTS.find(x=>x.id===id);if(!a||state.achievements[id]||!achievementReady(a))return;a.apply(state);state.achievements[id]=true;toast('🏅 Logro: '+a.title);tone(900,.11);save();updateUI();}
+function noteMilestoneTime(level){state.lifetime=state.lifetime||{};state.lifetime.firstReached=state.lifetime.firstReached||{};if(!state.lifetime.firstReached[level])state.lifetime.firstReached[level]=Math.floor(state.lifetime.playSeconds||0);}
+function recordMachine(level){markDiscovered(level);const prev=state.lifetime.maxLevel||1;state.lifetime.maxLevel=Math.max(prev,level);if(state.lifetime.maxLevel!==prev){trackEvent('level_reached',{level:state.lifetime.maxLevel,cores:state.cores});syncEraVisual();}if([10,25,50,75,100].includes(level))noteMilestoneTime(level);checkEraUnlock(level);for(const q of state.quests)if(q.type==='machine'&&level>=q.target)q.done=true;}
+function claimQuest(i,automatic=false){const q=state.quests[i];if(!q||!q.ready)return false;state.money+=q.reward;state.totalEarned+=q.reward;state.coins+=q.coins;if(q.battery)state.consumables.battery+=q.battery;if(q.bomb)state.consumables.bomb+=q.bomb;state.ordersDone++;state.lifetime.orders++;const extra=(q.battery?' + 🔋':'')+(q.bomb?' + 💣':'');if(!automatic)toast(`Pedido: +${nf(q.reward)} +${q.coins} 🪙${extra}`);const used=new Set(state.quests.filter((_,x)=>x!==i).map(x=>x.type));const choices=QUEST_TYPES.filter(t=>!used.has(t));state.quests[i]=makeQuest(choices.length?choices[Math.floor(Math.random()*choices.length)]:null);save();return true}
+function claimQuestById(id){const i=state.quests.findIndex(q=>q.id===id);if(i<0)return;if(claimQuest(i,false)){renderQuests();updateUI();}}
+function checkQuests(){ensureQuests();let changed=false;for(const q of state.quests){const p=questProgress(q);if(!q.ready&&p>=questGoal(q)){q.ready=true;changed=true;}}if(autoActive('autoClaim')){let claimed=false;for(let i=0;i<state.quests.length;i++)if(state.quests[i].ready){claimQuest(i,true);claimed=true;}if(claimed){toast('🤖 Pedidos reclamados automáticamente');changed=true;}}if(changed){save();renderQuests();}}
+let tutorialIndex=0, pendingDailyReward=null;
+function discoveredCount(){return Object.keys(state.discovered||{}).filter(k=>state.discovered[k]).length}
+function markDiscovered(level){state.discovered=state.discovered||{};if(!state.discovered[level]){state.discovered[level]=true;setTimeout(()=>showDiscovery(level),120);}}
+function eraRewardLabel(r){const bits=[];if(r.coins)bits.push(r.coins+' monedas');if(r.crate)bits.push(r.crate+' caja'+(r.crate>1?'s':''));if(r.battery)bits.push('1 batería');if(r.magnet)bits.push('1 imán');if(r.bomb)bits.push(r.bomb+' bombas');if(r.superBattery)bits.push(r.superBattery+' Super Batería'+(r.superBattery>1?'s':''));return bits.join(' · ')}
+function grantEraReward(idx,show=true){if(idx<=0||idx>=ERAS.length||state.eraRewards[idx])return;const r=ERA_REWARDS[idx]||{};state.eraRewards[idx]=true;state.coins+=r.coins||0;for(const k of ['battery','crate','magnet','bomb','superBattery'])if(r[k])state.consumables[k]=(state.consumables[k]||0)+r[k];save();if(show)openEraUnlock(idx,r);}
+function checkEraUnlock(level){if(level>1&&(level-1)%10===0){const idx=eraIndex(level);grantEraReward(idx,true);}}
+function openEraUnlock(idx,r){const e=ERAS[idx],start=idx*10+1;$('#eraUnlockIcon').textContent=e.emoji;$('#eraUnlockTitle').textContent=`ERA ${idx+1} · ${e.name}`;$('#eraUnlockRange').textContent=`N${start}–N${start+9}`;$('#eraUnlockReward').textContent='🎁 '+eraRewardLabel(r);const o=$('#eraOverlay');o.style.setProperty('--eraHue',e.hue);o.classList.add('open');o.setAttribute('aria-hidden','false');tone(980,.12);}
+function closeEraUnlock(){const o=$('#eraOverlay');o.classList.remove('open');o.setAttribute('aria-hidden','true');showDeferredOverlays();}
+function syncEraRewardsOnLoad(){state.eraRewards=state.eraRewards||{};for(let idx=1;idx<ERAS.length;idx++){const level=idx*10+1;if(state.discovered&&state.discovered[level]&&!state.eraRewards[idx])grantEraReward(idx,false);}}
+function showDiscovery(level){const cIdx=state.cells.findIndex(v=>v===level);const cell=cellNodes[cIdx];if(cell)cell.classList.add('unlock-glow');setTimeout(()=>cell&&cell.classList.remove('unlock-glow'),650);toast('🆕 '+machineDef(level).emoji+' · N'+level);tone(880,.08);renderCollection();updateUI();}
+function nextCollectionMilestone(){return COLLECTION_MILESTONES.find(m=>!(state.collectionMilestones&&state.collectionMilestones[m.level]))||null}
+function renderCollectionMilestones(){const box=$('#collectionMilestones');if(!box)return;box.innerHTML='';for(const m of COLLECTION_MILESTONES){const claimed=!!(state.collectionMilestones&&state.collectionMilestones[m.level]),unlocked=!!(state.discovered&&state.discovered[m.level]),ready=unlocked&&!claimed;const row=document.createElement('div');row.className='milestone-row'+(ready?' ready':'')+(claimed?' claimed':'');row.innerHTML=`<div class="milestone-level">N${m.level}</div><div class="milestone-copy"><b>${claimed?'✅ Hito cobrado':ready?'🎁 Recompensa lista':'Hito de colección'}</b><small>${m.label}</small></div><button class="mini" ${ready?'':'disabled'}>${claimed?'COBRADO':ready?'COBRAR':'BLOQ.'}</button>`;if(ready)row.querySelector('button').onclick=()=>claimCollectionMilestone(m.level);box.appendChild(row);}}
+function claimCollectionMilestone(level){const m=COLLECTION_MILESTONES.find(x=>x.level===level);if(!m||!(state.discovered&&state.discovered[m.level])||(state.collectionMilestones&&state.collectionMilestones[m.level]))return;state.collectionMilestones=state.collectionMilestones||{};state.collectionMilestones[m.level]=true;state.coins+=m.coins||0;for(const k of ['battery','crate','magnet','bomb','superBattery'])if(m[k])state.consumables[k]=(state.consumables[k]||0)+m[k];toast(`🏆 Hito N${m.level} · recompensa cobrada`);tone(920,.12);save();updateUI();renderCollection(true);}
+function renderCollection(force=false){const total=MACHINE_DEFS.length,found=discoveredCount();if($('#collectionCount'))$('#collectionCount').textContent=`${found} / ${total}`;if($('#collectionCountLarge'))$('#collectionCountLarge').textContent=`${found} / ${total}`;const next=nextCollectionMilestone();if($('#collectionNextMilestone'))$('#collectionNextMilestone').textContent=next?`Siguiente hito: N${next.level}${state.discovered&&state.discovered[next.level]?' · LISTO':''}`:'Colección completada';renderCollectionMilestones();const grid=$('#collectionGrid'),overlay=$('#collectionOverlay');if(!grid||(!force&&overlay&&!overlay.classList.contains('open')))return;const sig=`${preferences.theme}|${found}|${state.maxLevel}|${Object.keys(state.collectionMilestones||{}).join(',')}`;if(!force&&grid.dataset.sig===sig)return;grid.dataset.sig=sig;grid.innerHTML='';for(let i=1;i<=total;i++){if((i-1)%10===0){const e=eraFor(i),eraN=eraIndex(i)+1,h=document.createElement('div');h.className='era-header';h.innerHTML=`<span class="era-badge"><span class="era-dot" style="background:hsl(${e.hue} 65% 55%)"></span>${e.emoji} ERA ${eraN} · ${e.name}</span><small>N${i}–N${i+9}</small>`;grid.appendChild(h);}const def=machineDef(i),known=!!(state.discovered&&state.discovered[i]);const card=document.createElement('div');card.className='collection-card'+(known?'':' locked')+(i%10===0?' capstone':'');card.innerHTML=`<div class="collection-tile" style="background:${known?tileColor(i):(preferences.theme==='night'?'#3a342e':'#d8c8af')};color:${known?(preferences.theme==='night'?'#f4ede7':'#fffaf5'):'#7d6f63'}">${known?`<span class="emoji-big">${def.emoji}</span>`:'<span class="abbr">??</span>'}</div><div class="sub">N${i}</div>`;grid.appendChild(card);}}
+function openCollection(){const e=$('#collectionOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');renderCollection(true);}
+function closeCollection(){const e=$('#collectionOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true');showDeferredOverlays();}
+function tutorialNeedsShowing(){return false}
+function openTutorial(){tutorialIndex=0;const e=$('#tutorialOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');renderTutorialStep();}
+function renderTutorialStep(){const step=TUTORIAL_STEPS[tutorialIndex];$('#tutorialStepPill').textContent=`Paso ${tutorialIndex+1} / ${TUTORIAL_STEPS.length}`;$('#tutorialTitle').textContent=step.title;$('#tutorialBody').textContent=step.body;$('#tutorialArt').textContent=step.art;$('#tutorialNext').textContent=tutorialIndex===TUTORIAL_STEPS.length-1?'¡A JUGAR!':'Siguiente';}
+function closeTutorial(done=true){const e=$('#tutorialOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true');if(done){state.tutorialDone=true;save();}showDeferredOverlays();}
+function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function needsDailyReward(){return !state.daily||state.daily.lastDay!==todayKey()}
+function prepareDailyReward(){const last=state.daily&&state.daily.lastDay?new Date(state.daily.lastDay):null;const today=new Date(todayKey());let streak=state.daily&&state.daily.streak||0;if(last){const diff=Math.round((today-last)/86400000);if(diff>1)streak=0;}const reward=DAILY_REWARDS[streak%DAILY_REWARDS.length];pendingDailyReward={reward,displayDay:streak+1};$('#dailyStreak').textContent=`Día ${streak+1}`;if(reward.icon==='coin')$('#dailyIcon').innerHTML=coinSvg(44,'big');else $('#dailyIcon').textContent=reward.icon;$('#dailyName').textContent=reward.name;$('#dailyDesc').textContent=reward.desc;}
+function openDailyReward(){prepareDailyReward();const e=$('#dailyOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');}
+function claimDailyReward(){if(!pendingDailyReward)return;pendingDailyReward.reward.apply();state.daily=state.daily||{lastDay:'',lastTs:0,streak:0};const last=state.daily.lastDay?new Date(state.daily.lastDay):null;const today=new Date(todayKey());const diff=last?Math.round((today-last)/86400000):1;state.daily.streak=(diff===1?state.daily.streak+1:1);state.daily.lastDay=todayKey();state.daily.lastTs=Date.now();trackEvent('daily_reward_claimed',{streak:state.daily.streak,reward:pendingDailyReward.reward.name});toast('🎁 Recompensa diaria conseguida');tone(720,.08);save();updateUI();closeDailyReward();}
+function closeDailyReward(){const e=$('#dailyOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true');pendingDailyReward=null;showDeferredOverlays();}
+function openOfflineReward(){if(!(state.pendingOffline>0))return;$('#offlineGain').textContent=nf(state.pendingOffline);$('#offlineText').textContent='Tu fábrica siguió trabajando mientras estabas fuera. Puedes cobrar ahora o duplicarlo con un anuncio.';const e=$('#offlineOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');}
+function claimOffline(mult=1){const amount=Math.floor((state.pendingOffline||0)*mult);if(amount<=0){closeOfflineReward();return;}state.money+=amount;state.totalEarned+=amount;state.produced+=amount;state.lifetime.earned+=amount;state.pendingOffline=0;toast('💤 +' + nf(amount));tone(640,.08);save();updateUI();closeOfflineReward();}
+async function claimOfflineAd(){if(state.pendingOffline<=0)return;const ok=await requestRewardedAd('offline_x2');if(ok)claimOffline(2);else toast(hasRewardedAds()?'Anuncio cerrado sin recompensa':'No hay anuncios disponibles');syncProductionServices();}
+function closeOfflineReward(){const e=$('#offlineOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true');showDeferredOverlays();}
+function showDeferredOverlays(){if($('#dailyOverlay').classList.contains('open')||$('#offlineOverlay').classList.contains('open')||$('#collectionOverlay').classList.contains('open')||$('#eraOverlay').classList.contains('open')||$('#prestigeOverlay').classList.contains('open'))return; if(needsDailyReward()) return openDailyReward(); if(state.pendingOffline>0) return openOfflineReward();}
+function bumpStat(id){const e=$(id); if(!e) return; const p=e.closest('.stat'); if(!p) return; p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); setTimeout(()=>p.classList.remove('bump'),260);}
+const cellNodes=[];
+function buildBoard(){ensureQuests();gridEl.innerHTML='';cellNodes.length=0;for(let i=0;i<SIZE;i++){const c=document.createElement('div');c.dataset.i=i;bindCell(c,i);gridEl.appendChild(c);cellNodes.push(c);updateCell(i,false);}updateUI();}
+function updateCell(i,animate=true,mode='normal'){const c=cellNodes[i];if(!c)return;const l=state.cells[i],rare=state.rareCells&&state.rareCells[i];c.className='cell '+(l?'':'empty')+(i===selected?' selected':'')+(toolMode==='bomb'&&l?' bomb-target':'');c.replaceChildren();if(!l)return;const d=document.createElement('div');const rareDef=rare&&RARE_TYPES[rare];d.className='item '+(mode==='merge'?'merge-hit':mode==='buy'?'buy-hit':'')+(l%10===0?' era-capstone':'')+(rareDef?' '+rareDef.className:'')+(mode==='rare'?' rare-new':'');if(!animate)d.style.animation='none';d.style.background=tileColor(l);d.style.color=preferences.theme==='night'?'#f4ede7':(l<=2?'#6f6258':'#fffaf5');const def=machineDef(l);d.innerHTML=`<span class="machine-icon"><span class="machine-emoji">${def.emoji}</span></span>${rareDef?`<span class="rare-badge" title="${rareDef.name} · ×${rareMult(rare).toFixed(2)}">${rareDef.icon}</span>`:''}<span class="lvl">N${l}</span><span class="rate" data-cell="${i}">${nf(rateForCell(i))}/s</span>`;c.appendChild(d);}
+function updateRates(){for(let i=0;i<SIZE;i++){const c=cellNodes[i],l=state.cells[i];if(!c||!l)continue;const e=c.querySelector('.rate');if(e)e.textContent=nf(rateForCell(i))+'/s';}}
+function setSelected(i){const prev=selected;selected=i;if(prev>=0&&cellNodes[prev])cellNodes[prev].classList.remove('selected');if(i>=0&&cellNodes[i])cellNodes[i].classList.add('selected');}
+function redrawAll(animate=false){for(let i=0;i<SIZE;i++)updateCell(i,animate);}
+function fmtTime(sec){sec=Math.max(0,Math.ceil(sec));const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;if(h)return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;return m?`${m}:${String(s).padStart(2,'0')}`:`${s}s`}
+function humanDuration(sec){sec=Math.max(0,Math.floor(sec||0));const d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60);if(d)return `${d}d ${h}h`;if(h)return `${h}h ${m}m`;return `${m}m`;}
+function firstReachedText(level){const v=state.lifetime.firstReached&&state.lifetime.firstReached[level];return v?humanDuration(v):'—';}
+function updateUI(){ensureQuests();ensureDailyMissions();$('#money').textContent=nf(state.money);$('#income').textContent=nf(income())+'/s';$('#coins').innerHTML=`<span class="coin-inline">${coinSvg(18)} <span>${Math.floor(state.coins)}</span></span>`;$('#shopCoins').innerHTML=`<span class="coin-inline">${coinSvg(18)} <span>${Math.floor(state.coins)}</span></span>`;$('#mult').textContent='x'+totalMult().toFixed(2);$('#buyCost').textContent=nf(buyCost());$('#boost').textContent=`⚡ Turbo ${30+skillRank('turbo')*10}s`;$('#buy').disabled=state.money<buyCost()||!state.cells.includes(0);
+ for(const k of ['speed','supplier','market']){const b=$('#up'+k[0].toUpperCase()+k.slice(1)),cost=upgradeCost(k),cap=maxSupplierLevel(),maxed=k==='supplier'&&state.supplier>=cap;b.textContent=maxed?`MAX N${cap}`:`N${state[k]+1} · ${nf(cost)}`;b.classList.toggle('can',!maxed&&state.money>=cost);b.disabled=maxed||state.money<cost;}
+ $('#speedDesc').textContent=`+${20*(state.speed+1)}% producción total`;$('#supplierDesc').textContent=`Máquinas nuevas N${supplierLevel()} · límite N${maxSupplierLevel()} (${state.cores} 💎)`;$('#marketDesc').textContent=`+${15*(state.market+1)}% valor total`;
+ renderQuests();renderDailyMissions();renderCollection();renderAchievements();renderCoreSkills();renderResearch();syncEraVisual();$('#stats').innerHTML=`Máquina actual máx.: N${state.maxLevel}<br>Máquina histórica máx.: N${state.lifetime.maxLevel}<br>Fusiones totales: ${num(state.lifetime.merges)}<br>Compras totales: ${num(state.lifetime.bought)}<br>Pedidos totales: ${num(state.lifetime.orders)}<br>Prestigios: ${state.lifetime.prestiges}<br>Variantes raras: ${(state.rareStats&&state.rareStats.found)||0} (⚡ ${(state.rareStats&&state.rareStats.overcharged)||0} · ✨ ${(state.rareStats&&state.rareStats.golden)||0} · 💎 ${(state.rareStats&&state.rareStats.prototype)||0})<br>Investigaciones: ${researchCount()} / ${RESEARCH_TIERS.length}<br>Producción histórica: ${nf(state.lifetime.earned)}<br>Tiempo activo: ${humanDuration(state.lifetime.playSeconds)}<br>N10: ${firstReachedText(10)} · N25: ${firstReachedText(25)} · N50: ${firstReachedText(50)}<br>Colección: ${discoveredCount()} / ${MACHINE_DEFS.length}<br>Bonus colección: +${Math.round(collectionBonus()*100)}%<br>Bonus árbol: +${Math.round((skillProductionMult()-1)*100)}%<br>Núcleos libres: ${freeCores()} / ${state.cores}<br>Multiplicador Núcleos: x${coreMult().toFixed(2)}`;$('#cores').textContent=state.cores;$('#coreReq').textContent=nf(coreRequirement());$('#prestige').disabled=state.totalEarned<coreRequirement();const ce=eraFor(Math.max(1,state.lifetime.maxLevel||state.maxLevel));$('#currentEraLabel').textContent=`${ce.emoji} ERA ${eraIndex(Math.max(1,state.lifetime.maxLevel||state.maxLevel))+1} · ${ce.name}`;
+ const inv=state.consumables;$('#batteryCount').textContent='x'+inv.battery;$('#crateCount').textContent='x'+inv.crate;$('#magnetCount').textContent='x'+inv.magnet;$('#warpCount').textContent='x'+inv.warp;$('#bombCount').textContent='x'+inv.bomb;$('#superBatteryCount').textContent='x'+inv.superBattery;$('#useBattery').disabled=false;$('#useCrate').disabled=inv.crate>0&&!state.cells.includes(0);$('#useMagnet').disabled=inv.magnet>0&&!hasMergePair();$('#useWarp').disabled=inv.warp>0&&income()<=0;$('#useBomb').disabled=false;$('#useSuperBattery').disabled=false;
+ const now=Date.now(),tLeft=(state.turboUntil-now)/1000,bLeft=(state.batteryUntil-now)/1000,sbLeft=(state.superBatteryUntil-now)/1000;$('#boost').textContent=tLeft>0?`⚡ Turbo ${fmtTime(tLeft)} · REINICIAR`:`⚡ Turbo ${30+skillRank('turbo')*10+researchTurboBonus()}s · GRATIS`;$('#boost').disabled=false;$('#useBattery').textContent=bLeft>0?`USAR · ACTIVO ${fmtTime(bLeft)}`:'USAR 5 MIN';$('#useBattery').classList.toggle('battery-active',bLeft>0);$('#useSuperBattery').textContent=sbLeft>0?`USAR · ACTIVO ${fmtTime(sbLeft)}`:'USAR 12 H';$('#useSuperBattery').classList.toggle('super-battery-active',sbLeft>0);$('#useBomb').textContent=toolMode==='bomb'?'CANCELAR':'USAR';updateAutomationUI();updateRates();}
+function updateAutomationUI(){
+ const cfg=[
+  ['autoBuy','autoBuyRow','autoBuyToggle','autoBuyDesc',1,`Compra una máquina cada ${Math.round(autoBuyInterval()/1000)} s cuando puede.`],
+  ['autoMerge','autoMergeRow','autoMergeToggle','autoMergeDesc',2,`Fusiona un par cada ${Math.max(1,autoMergeInterval()/1000)} s.`],
+  ['autoClaim','autoClaimRow','autoClaimToggle','autoClaimDesc',5,'Reclama y reemplaza pedidos completados automáticamente.'],
+  ['autoClean','autoCleanRow','autoCleanToggle','autoCleanDesc',6,'Con el tablero ≥90%, elimina máquinas 4+ niveles por debajo de tu máximo.']
+ ];
+ for(const [key,rowId,btnId,descId,need,desc] of cfg){
+  const unlocked=autoUnlocked(key),owned=autoOwned(key),row=$('#'+rowId),btn=$('#'+btnId),cost=AUTO_COSTS[key];
+  row.classList.toggle('locked',!unlocked);
+  btn.classList.toggle('locked',!unlocked);
+  btn.classList.toggle('on',unlocked&&owned&&state.automation[key]);
+  btn.disabled=!unlocked;
+  if(!unlocked)btn.textContent=`${need} 💎`;
+  else if(!owned)btn.textContent=`COMPRAR ${nf(cost)}`;
+  else btn.textContent=state.automation[key]?'ON':'OFF';
+  $('#'+descId).textContent=!unlocked?`Se desbloquea con ${need} Núcleo${need===1?'':'s'}.`:!owned?`${desc} Instalación permanente: ${nf(cost)}.`:desc+' · INSTALADO permanentemente.';
+ }
+ const adv=state.cores>=8&&autoOwned('autoMerge');
+ $('#mergePriorityBox').classList.toggle('disabled',!adv);$('#reserveBox').classList.toggle('disabled',state.cores<8||!autoOwned('autoBuy'));
+ $('#mergePriority').value=state.automation.mergePriority||'low';$('#reservePct').value=String(state.automation.reservePct||0);
+ const next=nextAutomationUnlock();
+ $('#autoNext').textContent=next?`Próximo desbloqueo: ${next[1]} con ${next[0]} 💎. Las automatizaciones compradas no se pierden al prestigiar.`:'✅ Todos los niveles de automatización desbloqueados. Las instalaciones compradas son permanentes.';
+}
+function bindCell(c,i){c.addEventListener('pointerdown',e=>{e.preventDefault();tapCell(i,c)});}
+let pendingRareMerge=null;
+function tapCell(i,c){const l=state.cells[i];if(toolMode==='bomb'){if(!l){toast('💣 Elige una máquina para eliminar');tone(170,.04);return;}consume('bomb');state.cells[i]=0;state.rareCells[i]=null;toolMode=null;setSelected(-1);updateCell(i,false);for(let x=0;x<SIZE;x++)if(cellNodes[x])cellNodes[x].classList.remove('bomb-target');burst(c,'#ff6b7d');floatText(c,'BOOM!');toast('💣 Máquina eliminada');tone(120,.08);setTimeout(()=>tone(70,.12),60);save();updateUI();return;}if(selected<0){if(l){setSelected(i);tone(240,.04);}return;}if(selected===i){setSelected(-1);pendingRareMerge=null;return;}const from=selected,a=state.cells[from],b=state.cells[i];if(a&&a===b){if(b>=MACHINE_DEFS.length){toast('🏆 N100 es el nivel máximo');setSelected(-1);tone(920,.08);return;}const ra=state.rareCells[from]||null,rb=state.rareCells[i]||null;if(!rarePairSafe(ra,rb)&&(ra||rb)){const sig=`${from}:${i}:${ra||'n'}:${rb||'n'}`;if(!pendingRareMerge||pendingRareMerge.sig!==sig||Date.now()-pendingRareMerge.ts>1800){pendingRareMerge={sig,ts:Date.now()};toast(`⚠️ La variante ${rareName(ra||rb)} se perderá. Toca otra vez para confirmar.`);tone(170,.06);return;}}pendingRareMerge=null;const resultRare=mergeResultRare(ra,rb);mergeTravel(from,i,b);state.cells[from]=0;state.rareCells[from]=null;state.cells[i]=b+1;state.rareCells[i]=resultRare;state.merges++;state.lifetime.merges++;state.maxLevel=Math.max(state.maxLevel,b+1);recordMachine(b+1);setSelected(-1);updateCell(from,false);updateCell(i,true,resultRare?'rare':'merge');checkQuests();burst(c,resultRare?(resultRare==='golden'?'#f0c33c':resultRare==='prototype'?'#bc76ff':'#5fb6ff'):tileColor(b+1));floatText(c,resultRare?`${rareIcon(resultRare)} CONSERVADA`:(b+1)%10===0?`N${b+1} ★`:'MERGE!');bumpStat('#income');tone((b+1)%10===0?660:520,.08);setTimeout(()=>tone(resultRare?920:(b+1)%10===0?980:760,.09),60);save();updateUI();return;}if(b===0){state.cells[i]=a;state.rareCells[i]=state.rareCells[from]||null;state.cells[from]=0;state.rareCells[from]=null;setSelected(-1);pendingRareMerge=null;updateCell(from,false);updateCell(i,true);tone(180,.03);save();updateUI();return;}pendingRareMerge=null;setSelected(i);tone(210,.03);}
+function buy(automatic=false){const cost=buyCost();if(state.money<cost)return false;const empties=state.cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0);if(!empties.length)return false;if(automatic&&state.cores>=8){const reserve=autoReserveAmount();if(state.money-cost<reserve)return false;}state.money-=cost;state.buyCount++;state.lifetime.bought++;const i=empties[Math.floor(Math.random()*empties.length)];state.cells[i]=supplierLevel();const rare=rollRare();state.rareCells[i]=rare;state.maxLevel=Math.max(state.maxLevel,state.cells[i]);recordMachine(state.cells[i]);if(rare)recordRare(rare);updateCell(i,true,rare?'rare':'buy');checkQuests();if(!automatic){floatText(cellNodes[i],rare?`${rareIcon(rare)} ${rareName(rare).toUpperCase()}`:'NUEVA');bumpStat('#money');tone(rare?720:330,rare?0.09:0.05);if(rare){toast(`${rareIcon(rare)} ¡${rareName(rare)}! ×${rareMult(rare).toFixed(2)} producción`);burst(cellNodes[i],rare==='golden'?'#f0c33c':rare==='prototype'?'#bc76ff':'#5fb6ff');}}save();updateUI();return true;}
+function upgrade(k){if(k==='supplier'&&state.supplier>=maxSupplierLevel())return;const cost=upgradeCost(k);if(state.money<cost)return;state.money-=cost;state[k]++;state.upgradeCount++;state.lifetime.upgrades++;checkQuests();toast('Mejora comprada');tone(620,.06);save();updateUI();}
+function openPrestigePreview(){if(state.totalEarned<coreRequirement())return;$('#prestigeNow').textContent='x'+coreMult().toFixed(2);const next=1+0.25*(Math.pow(2,state.cores+1)-1);$('#prestigeNext').textContent='x'+next.toFixed(2);const o=$('#prestigeOverlay');o.classList.add('open');o.setAttribute('aria-hidden','false');}
+function closePrestigePreview(){const o=$('#prestigeOverlay');o.classList.remove('open');o.setAttribute('aria-hidden','true');}
+function doPrestige(){const req=coreRequirement();if(state.totalEarned<req)return;closePrestigePreview();const keep={cores:state.cores+1,coins:state.coins,consumables:{...state.consumables},ordersDone:state.ordersDone,batteryUntil:state.batteryUntil,superBatteryUntil:state.superBatteryUntil,automation:{...state.automation},automationOwned:{...state.automationOwned},discovered:{...(state.discovered||{1:true})},collectionMilestones:{...(state.collectionMilestones||{})},eraRewards:{...(state.eraRewards||{})},achievements:{...(state.achievements||{})},coreSkills:{...(state.coreSkills||{})},research:{...(state.research||{})},rareStats:{...(state.rareStats||{})},lifetime:{...(state.lifetime||{})},daily:{...(state.daily||{lastDay:'',lastTs:0,streak:0})},dailyMissionMeta:{...(state.dailyMissionMeta||{day:'',streak:0,lastCompleteDay:'',grandReady:false})},dailyMissions:(state.dailyMissions||[]).map(m=>({...m})),tutorialDone:true};state={money:25,totalEarned:0,produced:0,cells:Array(SIZE).fill(0),rareCells:Array(SIZE).fill(null),speed:0,supplier:1,market:0,cores:keep.cores,coins:keep.coins,merges:0,maxLevel:1,quests:[],dailyMissions:keep.dailyMissions,turboUntil:0,batteryUntil:keep.batteryUntil,superBatteryUntil:keep.superBatteryUntil,buyCount:0,upgradeCount:0,ordersDone:keep.ordersDone,consumables:keep.consumables,automation:keep.automation,automationOwned:keep.automationOwned,discovered:keep.discovered,collectionMilestones:keep.collectionMilestones,eraRewards:keep.eraRewards,achievements:keep.achievements,coreSkills:keep.coreSkills,research:keep.research,rareStats:keep.rareStats,lifetime:keep.lifetime,daily:keep.daily,dailyMissionMeta:keep.dailyMissionMeta,pendingOffline:0,tutorialDone:keep.tutorialDone,last:Date.now(),saveVersion:16};state.lifetime.prestiges=(state.lifetime.prestiges||0)+1;trackEvent('prestige_completed',{cores:state.cores,prestiges:state.lifetime.prestiges});autoNextRun={buy:0,merge:0,clean:0};for(let i=0;i<4;i++)state.cells[i]=1;markDiscovered(1);ensureQuests();ensureDailyMissions();setSelected(-1);redrawAll(false);toast(`💎 Núcleo ${state.cores} · Proveedor hasta N${maxSupplierLevel()}`);document.querySelector('#game').animate([{transform:'scale(1)'},{transform:'scale(1.01)'},{transform:'scale(1)'}],{duration:340});bumpStat('#income');tone(420,.08);setTimeout(()=>tone(720,.1),70);save();updateUI();}
+function sortCells(){const items=[];for(let i=0;i<SIZE;i++)if(state.cells[i])items.push({l:state.cells[i],r:state.rareCells[i]||null});const rarityRank={prototype:3,golden:2,overcharged:1};items.sort((a,b)=>(b.l-a.l)||((rarityRank[b.r]||0)-(rarityRank[a.r]||0)));state.cells=items.map(x=>x.l).concat(Array(SIZE-items.length).fill(0));state.rareCells=items.map(x=>x.r).concat(Array(SIZE-items.length).fill(null));setSelected(-1);redrawAll(false);tone(280,.05);save();updateUI();}
+function hasMergePair(){const seen=new Set();for(let i=0;i<SIZE;i++){const l=state.cells[i];if(!l)continue;const key=l+'|'+(state.rareCells[i]||'normal');if(seen.has(key))return true;seen.add(key);}return false}
+function autoMergeOne(){const groups={};for(let i=0;i<SIZE;i++){const l=state.cells[i];if(l){const key=l+'|'+(state.rareCells[i]||'normal');(groups[key]??=[]).push(i);}}let keys=Object.keys(groups).filter(k=>groups[k].length>=2);if(!keys.length)return false;keys.sort((ka,kb)=>{const a=Number(ka.split('|')[0]),b=Number(kb.split('|')[0]);return state.automation.mergePriority==='high'?b-a:a-b});const key=keys[0],l=Number(key.split('|')[0]),a=groups[key][0],b=groups[key][1];if(l>=MACHINE_DEFS.length)return false;const rare=state.rareCells[a]||null;state.cells[a]=0;state.rareCells[a]=null;state.cells[b]=l+1;state.rareCells[b]=rare;state.merges++;state.lifetime.merges++;state.maxLevel=Math.max(state.maxLevel,l+1);recordMachine(l+1);updateCell(a,false);updateCell(b,true,rare?'rare':'merge');cellNodes[b].classList.add('merge-impact');setTimeout(()=>cellNodes[b]&&cellNodes[b].classList.remove('merge-impact'),340);burst(cellNodes[b],rare?(rare==='golden'?'#f0c33c':rare==='prototype'?'#bc76ff':'#5fb6ff'):tileColor(l+1));checkQuests();save();return true}
+function autoCleanOne(){const filled=state.cells.filter(Boolean).length;if(filled<Math.ceil(SIZE*.9))return false;const max=Math.max(...state.cells.filter(Boolean));const candidates=[];for(let i=0;i<SIZE;i++)if(state.cells[i]&&max-state.cells[i]>=4&&!state.rareCells[i])candidates.push(i);if(!candidates.length)return false;candidates.sort((a,b)=>state.cells[a]-state.cells[b]);const i=candidates[0];state.cells[i]=0;state.rareCells[i]=null;updateCell(i,false);save();return true}
+function runAutomation(now){if(gamePaused)return;if(autoActive('autoBuy')&&now>=autoNextRun.buy){buy(true);autoNextRun.buy=now+autoBuyInterval();}if(autoActive('autoMerge')&&now>=autoNextRun.merge){autoMergeOne();autoNextRun.merge=now+autoMergeInterval();}if(autoActive('autoClean')&&now>=autoNextRun.clean){autoCleanOne();autoNextRun.clean=now+7000;}}
+const CONSUMABLE_INFO={battery:{name:'Batería industrial',icon:'🔋'},crate:{name:'Caja premium',icon:'📦'},magnet:{name:'Imán de fusión',icon:'🧲'},warp:{name:'Salto temporal',icon:'⏱️'},bomb:{name:'Bomba',icon:'💣'},superBattery:{name:'Super Batería Industrial',icon:'🔋⚡'}};
+function openEmptyConsumable(k){const info=CONSUMABLE_INFO[k]||{name:'consumible',icon:'🧪'};$('#emptyConsumableIcon').textContent=info.icon;$('#emptyConsumableTitle').textContent=`No te quedan ${info.name}`;$('#emptyConsumableText').textContent='Puedes conseguir 25 monedas viendo un anuncio o abrir la tienda para comprar monedas.';const e=$('#emptyConsumableOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');}
+function closeEmptyConsumable(){const e=$('#emptyConsumableOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true');}
+function requireConsumable(k){if((state.consumables[k]||0)>0)return true;openEmptyConsumable(k);tone(170,.05);return false}
+function consume(k){state.consumables[k]=Math.max(0,(state.consumables[k]||0)-1)}
+function useBattery(){if(!requireConsumable('battery'))return;consume('battery');state.batteryUntil=Math.max(Date.now(),state.batteryUntil)+300000;toast('🔋 Batería: x2 durante +5 min');tone(700,.09);save();updateUI();}
+function useCrate(){if(!requireConsumable('crate'))return;if(!state.cells.includes(0)){toast('No hay hueco para abrir la caja');return;}consume('crate');const empties=state.cells.map((v,i)=>v===0?i:-1).filter(i=>i>=0),i=empties[Math.floor(Math.random()*empties.length)];let l=supplierLevel()+(Math.random()<.2?1:0);l=Math.min(l,MACHINE_DEFS.length);state.cells[i]=l;const rare=rollRare();state.rareCells[i]=rare;if(rare)recordRare(rare);state.maxLevel=Math.max(state.maxLevel,l);recordMachine(l);updateCell(i,true,rare?'rare':'buy');checkQuests();burst(cellNodes[i],rare?(rare==='golden'?'#f0c33c':rare==='prototype'?'#bc76ff':'#5fb6ff'):tileColor(l));toast(rare?`${rareIcon(rare)} Caja: ${rareName(rare)} N${l}`:l>supplierLevel()?'📦 ¡Caja premium! Máquina N'+l:'📦 Máquina N'+l);tone(rare?760:560,.08);save();updateUI();}
+function autoMergePass(){let changed=false;const groups={};for(let i=0;i<SIZE;i++){const l=state.cells[i];if(!l)continue;const key=l+'|'+(state.rareCells[i]||'normal');(groups[key]??=[]).push(i)}const keys=Object.keys(groups).sort((ka,kb)=>Number(ka.split('|')[0])-Number(kb.split('|')[0]));for(const key of keys){const l=Number(key.split('|')[0]),arr=groups[key];while(arr.length>=2){const a=arr.shift(),b=arr.shift();if(state.cells[a]!==l||state.cells[b]!==l)continue;if(l>=MACHINE_DEFS.length)continue;const rare=state.rareCells[a]||null;state.cells[a]=0;state.rareCells[a]=null;state.cells[b]=l+1;state.rareCells[b]=rare;state.merges++;state.lifetime.merges++;state.maxLevel=Math.max(state.maxLevel,l+1);recordMachine(l+1);changed=true;updateCell(a,false);updateCell(b,true,rare?'rare':'merge');cellNodes[b].classList.add('merge-impact');setTimeout(()=>cellNodes[b]&&cellNodes[b].classList.remove('merge-impact'),340);burst(cellNodes[b],rare?(rare==='golden'?'#f0c33c':rare==='prototype'?'#bc76ff':'#5fb6ff'):tileColor(l+1));}}return changed}
+function useMagnet(){if(!requireConsumable('magnet'))return;if(!hasMergePair()){toast('No hay pares para fusionar');return;}consume('magnet');let rounds=0;while(hasMergePair()&&rounds<12){if(!autoMergePass())break;rounds++;}setSelected(-1);checkQuests();toast('🧲 Fusión automática completada');tone(520,.08);setTimeout(()=>tone(760,.08),60);save();updateUI();}
+function useWarp(){if(!requireConsumable('warp'))return;if(income()<=0){toast('Necesitas producción activa');return;}consume('warp');const gain=income()*120;state.money+=gain;state.totalEarned+=gain;state.produced+=gain;state.lifetime.earned+=gain;checkQuests();toast('⏱️ +'+nf(gain)+' de producción');tone(820,.1);save();updateUI();}
+function useBomb(){if(toolMode==='bomb'){toolMode=null;for(let i=0;i<SIZE;i++)updateCell(i,false);toast('Bomba cancelada');updateUI();return;}if(!requireConsumable('bomb'))return;if(!state.cells.some(Boolean)){toast('No hay máquinas que eliminar');return;}toolMode='bomb';setSelected(-1);for(let i=0;i<SIZE;i++)updateCell(i,false);toast('💣 Elige la máquina que quieres eliminar');tone(190,.06);updateUI();}
+function useSuperBattery(){if(!requireConsumable('superBattery'))return;consume('superBattery');state.superBatteryUntil=Math.max(Date.now(),state.superBatteryUntil)+43200000;toast('🔋⚡ Super Batería: x2 durante +12 h');tone(760,.1);save();updateUI();}
+
+function boost(){const seconds=30+skillRank('turbo')*10+researchTurboBonus();state.turboUntil=Date.now()+seconds*1000;toast(`⚡ Turbo x2 durante ${seconds} s`);tone(640,.07);save();updateUI();}
+function buyConsumable(item,cost){if(state.coins<cost){toast('No tienes suficientes monedas');return;}state.coins-=cost;state.consumables[item]=(state.consumables[item]||0)+1;toast('Comprado · -'+cost+' 🪙');tone(560,.06);save();updateUI();}
+function syncShopTheme(){const night=preferences.theme==='night';document.querySelectorAll('.shop-item.featured').forEach(el=>{el.classList.toggle('shop-night-force',night);el.classList.toggle('shop-day-force',!night);el.style.setProperty('background',night?'#342b20':'#f7edd3','important');el.style.setProperty('color',night?'#eee7df':'#5f574f','important');el.style.setProperty('border','2px solid '+(night?'#8a6e2d':'#d9a441'),'important');el.style.setProperty('box-shadow','none','important');el.querySelectorAll('strong').forEach(x=>x.style.setProperty('color',night?'#eee7df':'#5f574f','important'));el.querySelectorAll('small').forEach(x=>x.style.setProperty('color',night?'#b7aa9d':'#887a67','important'));});}
+function openShop(){syncShopTheme();const e=$('#shopOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');updateUI();}
+function closeShop(){const e=$('#shopOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true');if(isMobileLayout())document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===mobileTab));}
+async function watchRewardedAd(){const ok=await requestRewardedAd('coins_25_reward');if(!ok){toast(hasRewardedAds()?'Anuncio cerrado sin recompensa':'No hay anuncios disponibles');syncProductionServices();return;}state.coins+=25;trackEvent('coins_rewarded_ad',{coins:25});toast('+25 monedas por ver el anuncio');tone(860,.1);save();updateUI();}
+async function buyCoinPack(key){const pack=COIN_PACKS[key];if(!pack)return;const handler=window.MergeFactoryPayments&&window.MergeFactoryPayments.purchase;if(typeof handler!=='function'){syncProductionServices();toast('Compras no disponibles');return;}trackEvent('purchase_started',{sku:key,coins:pack.coins,priceEUR:pack.price});try{const result=await handler({sku:key,coins:pack.coins,priceEUR:pack.price});if(result&&result.verified===true){state.coins+=pack.coins;trackEvent('purchase_completed',{sku:key,coins:pack.coins});toast(`+${pack.coins} monedas`);save();updateUI();}else{trackEvent('purchase_not_verified',{sku:key});toast('La compra no pudo verificarse');}}catch(e){trackEvent('purchase_failed',{sku:key,message:String(e&&e.message||e)});toast('Compra cancelada o fallida');}}
+function tick(nowPerf){const now=Date.now(),dt=gamePaused?0:Math.min(1,(now-state.last)/1000);state.last=now;if(dt>0){const gain=income()*dt;state.money+=gain;state.totalEarned+=gain;state.produced+=gain;state.lifetime.earned+=gain;state.lifetime.playSeconds+=dt;}runAutomation(now);$('#money').textContent=nf(state.money);$('#income').textContent=nf(income())+'/s';$('#coins').innerHTML=`<span class="coin-inline">${coinSvg(18)} <span>${Math.floor(state.coins)}</span></span>`;$('#mult').textContent='x'+totalMult().toFixed(2);if(now-lastQuestCheck>500){lastQuestCheck=now;checkQuests();}if(Date.now()%5000<70)save();requestAnimationFrame(tick);}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),1700)}
+function floatText(cell,t){const r=cell.getBoundingClientRect(),g=$('#game').getBoundingClientRect(),e=document.createElement('div');e.className='float';e.textContent=t;e.style.left=(r.left-g.left+r.width/2-28)+'px';e.style.top=(r.top-g.top+10)+'px';e.style.color='var(--gold)';$('#game').appendChild(e);setTimeout(()=>e.remove(),900)}
+function burst(cell,color){const r=cell.getBoundingClientRect(),g=$('#game').getBoundingClientRect(),p=$('#particles');for(let n=0;n<12;n++){const e=document.createElement('i');e.className='particle';e.style.background=color;e.style.left=(r.left-g.left+r.width/2)+'px';e.style.top=(r.top-g.top+r.height/2)+'px';e.style.setProperty('--x',(Math.random()*120-60)+'px');e.style.setProperty('--y',(Math.random()*120-60)+'px');p.appendChild(e);setTimeout(()=>e.remove(),700)}}
+function loadPreferences(){try{const p=JSON.parse(localStorage.getItem('mergeFactoryPreferences')||'null');if(p&&typeof p==='object'){if(typeof p.volume!=='number'&&typeof p.sound==='boolean')p.volume=p.sound?70:0;preferences={...preferences,...p};}}catch(e){}preferences.volume=Math.max(0,Math.min(100,Number(preferences.volume)||0));delete preferences.sound;applyPreferences(false)}
+function savePreferences(){localStorage.setItem('mergeFactoryPreferences',JSON.stringify(preferences))}
+function volumeIcon(v){return v<=0?'🔇':v<40?'🔈':v<75?'🔉':'🔊'}
+function applyPreferences(redraw=true){document.documentElement.setAttribute('data-theme',preferences.theme==='night'?'night':'light');syncShopTheme();const night=$('#nightModeToggle'),slider=$('#volumeSlider');if(night)night.checked=preferences.theme==='night';if(slider)slider.value=preferences.volume;if($('#themeValue'))$('#themeValue').textContent=preferences.theme==='night'?'NOCHE':'DÍA';if($('#soundValue'))$('#soundValue').textContent=Math.round(preferences.volume)+'%';if($('#volumeIcon'))$('#volumeIcon').textContent=volumeIcon(preferences.volume);if(redraw&&cellNodes.length){redrawAll(false);renderCollection();syncEraVisual();}}
+function openSettings(){const e=$('#settingsOverlay');e.classList.add('open');e.setAttribute('aria-hidden','false');applyPreferences(false)}
+function closeSettings(){const e=$('#settingsOverlay');e.classList.remove('open');e.setAttribute('aria-hidden','true')}
+function tone(f,d){const volume=Math.max(0,Math.min(100,Number(preferences.volume)||0))/100;if(volume<=0)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=f;o.type='triangle';g.gain.setValueAtTime(.035*volume,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+d);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d)}catch(e){}}
+function save(){try{const next=JSON.stringify({...state,saveVersion:16,last:Date.now()});const current=localStorage.getItem(SAVE_KEY);if(current){try{const parsed=JSON.parse(current);if(parsed&&Array.isArray(parsed.cells)&&parsed.cells.length===SIZE)localStorage.setItem(BACKUP_KEY,current);}catch(e){}}localStorage.setItem(SAVE_KEY,next);}catch(e){trackEvent('save_error',{message:String(e&&e.message||e)})}}
+function migrate(s){if(!s.saveVersion||s.saveVersion<2)s.supplier=Math.max(1,(s.supplier||0)+1);if(!s.consumables)s.consumables={battery:2,crate:1,magnet:1,warp:1,bomb:1,superBattery:0};s.consumables={battery:0,crate:0,magnet:0,warp:0,bomb:0,superBattery:0,...s.consumables};if(!Array.isArray(s.rareCells)||s.rareCells.length!==SIZE)s.rareCells=Array(SIZE).fill(null);if(!s.research||typeof s.research!=='object')s.research={};if(!s.rareStats||typeof s.rareStats!=='object')s.rareStats={found:0,overcharged:0,golden:0,prototype:0};s.rareStats={found:0,overcharged:0,golden:0,prototype:0,...s.rareStats};if(typeof s.ordersDone!=='number')s.ordersDone=0;if(typeof s.coins!=='number')s.coins=0;if(typeof s.produced!=='number')s.produced=s.totalEarned||0;if(typeof s.upgradeCount!=='number')s.upgradeCount=0;if(typeof s.turboUntil!=='number')s.turboUntil=0;if(typeof s.batteryUntil!=='number')s.batteryUntil=0;if(typeof s.superBatteryUntil!=='number')s.superBatteryUntil=0;if(typeof s.pendingOffline!=='number')s.pendingOffline=0;if(typeof s.tutorialDone!=='boolean')s.tutorialDone=true;if(!s.daily)s.daily={lastDay:'',lastTs:0,streak:0};if(!s.dailyMissionMeta)s.dailyMissionMeta={day:'',streak:0,lastCompleteDay:'',grandReady:false};if(!Array.isArray(s.dailyMissions))s.dailyMissions=[];if(!s.eraRewards||typeof s.eraRewards!=='object')s.eraRewards={};if(!s.achievements||typeof s.achievements!=='object')s.achievements={};if(!s.coreSkills||typeof s.coreSkills!=='object')s.coreSkills={};s.coreSkills={power:0,buy:0,upgrade:0,offline:0,turbo:0,automation:0,...s.coreSkills};if(!s.lifetime||typeof s.lifetime!=='object')s.lifetime={};s.lifetime={merges:s.merges||0,bought:s.buyCount||0,earned:s.produced||s.totalEarned||0,upgrades:s.upgradeCount||0,prestiges:s.cores||0,orders:s.ordersDone||0,dailyDays:(s.dailyMissionMeta&&s.dailyMissionMeta.streak)||0,maxLevel:s.maxLevel||1,playSeconds:0,startedAt:Date.now(),firstReached:{},...s.lifetime};if(!s.lifetime.firstReached)s.lifetime.firstReached={};for(const m of s.dailyMissions){if(typeof m.start!=='number'){if(m.type==='buy')m.start=Math.max(0,s.lifetime.bought-(s.buyCount||0));else if(m.type==='merge')m.start=Math.max(0,s.lifetime.merges-(s.merges||0));else if(m.type==='earn')m.start=Math.max(0,s.lifetime.earned-(s.produced||0));else if(m.type==='upgrade')m.start=Math.max(0,s.lifetime.upgrades-(s.upgradeCount||0));else m.start=0;}}if(!s.discovered||typeof s.discovered!=='object')s.discovered={1:true};if(!s.collectionMilestones||typeof s.collectionMilestones!=='object')s.collectionMilestones={};for(let i=1;i<=Math.max(1,s.maxLevel||1);i++){if(i===1||((s.maxLevel||1)>=i&&i<=Math.max(1,s.maxLevel||1)&&((s.cells||[]).includes(i)||i<=Math.max(1,s.supplier||1)))) s.discovered[i]=true;}if(s.boostUntil&&s.boostUntil>Date.now())s.batteryUntil=Math.max(s.batteryUntil,s.boostUntil);if(!Array.isArray(s.quests))s.quests=[];for(const q of s.quests)if(typeof q.ready!=='boolean')q.ready=false;s.automation={autoBuy:true,autoMerge:true,autoClaim:true,autoClean:true,mergePriority:'low',reservePct:0,...(s.automation||{})};s.automationOwned={autoBuy:false,autoMerge:false,autoClaim:false,autoClean:false,...(s.automationOwned||{})};delete s.order;delete s.boostUntil;s.saveVersion=16;return s;}
+function load(){try{let s=null;try{s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null')}catch(e){trackEvent('save_parse_error',{source:'primary'});}if(!(s&&Array.isArray(s.cells)&&s.cells.length===SIZE)){try{s=JSON.parse(localStorage.getItem(BACKUP_KEY)||'null');if(s)trackEvent('save_backup_restored',{});}catch(e){s=null;}}if(s&&Array.isArray(s.cells)&&s.cells.length===SIZE){s=migrate(s);state={...state,...s};ensureQuests();ensureDailyMissions();const offline=Math.min(researchOfflineCap(),Math.max(0,(Date.now()-(s.last||Date.now()))/1000));if(offline>10){state.pendingOffline=Math.floor(income()*offline*.35*(1+skillRank('offline')*.12)*researchOfflineMult());}}}catch(e){}if(!Array.isArray(state.rareCells)||state.rareCells.length!==SIZE)state.rareCells=Array(SIZE).fill(null);if(state.cells.every(v=>!v)){state.cells[0]=1;state.cells[1]=1;state.cells[2]=1;state.cells[3]=1}ensureQuests();ensureDailyMissions();markDiscovered(1);syncEraRewardsOnLoad();state.lifetime.maxLevel=Math.max(state.lifetime.maxLevel||1,...Object.keys(state.discovered||{}).filter(k=>state.discovered[k]).map(Number));syncEraVisual();}
+let resetArmTimer=null;
+function resetProgress(){const b=$('#resetProgress');if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='CONFIRMAR REINICIO';clearTimeout(resetArmTimer);resetArmTimer=setTimeout(()=>{b.dataset.armed='0';b.textContent='REINICIAR PARTIDA';},3500);return;}localStorage.removeItem(SAVE_KEY);localStorage.removeItem(BACKUP_KEY);trackEvent('progress_reset',{});location.reload();}
+$('#openSettings').onclick=openSettings;$('#closeSettings').onclick=closeSettings;$('#openCollection').onclick=openCollection;$('#closeCollection').onclick=closeCollection;$('#collectionOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#collectionOverlay'))closeCollection();});if($('#tutorialSkip'))$('#tutorialSkip').onclick=()=>closeTutorial(true);if($('#tutorialNext'))$('#tutorialNext').onclick=()=>{tutorialIndex++;if(tutorialIndex>=TUTORIAL_STEPS.length)closeTutorial(true);else renderTutorialStep();};$('#claimDaily').onclick=claimDailyReward;$('#closeDaily').onclick=claimDailyReward;$('#dailyOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#dailyOverlay'))claimDailyReward();});$('#claimOffline').onclick=()=>claimOffline(1);$('#claimOfflineAd').onclick=claimOfflineAd;$('#closeOffline').onclick=closeOfflineReward;$('#offlineOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#offlineOverlay'))closeOfflineReward();});$('#settingsOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#settingsOverlay'))closeSettings();});$('#nightModeToggle').onchange=e=>{preferences.theme=e.target.checked?'night':'light';savePreferences();applyPreferences(true);};$('#volumeSlider').addEventListener('input',e=>{preferences.volume=Math.max(0,Math.min(100,Number(e.target.value)||0));savePreferences();applyPreferences(false);});$('#volumeSlider').addEventListener('change',()=>{if(preferences.volume>0)tone(520,.08);});
+$('#buy').onclick=()=>buy(false);$('#upSpeed').onclick=()=>upgrade('speed');$('#upSupplier').onclick=()=>upgrade('supplier');$('#upMarket').onclick=()=>upgrade('market');$('#prestige').onclick=openPrestigePreview;$('#confirmPrestige').onclick=doPrestige;$('#closePrestige').onclick=closePrestigePreview;$('#prestigeOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#prestigeOverlay'))closePrestigePreview();});$('#closeEraUnlock').onclick=closeEraUnlock;$('#resetProgress').onclick=resetProgress;$('#sort').onclick=sortCells;$('#boost').onclick=boost;$('#useBattery').onclick=useBattery;$('#useCrate').onclick=useCrate;$('#useMagnet').onclick=useMagnet;$('#useWarp').onclick=useWarp;$('#useBomb').onclick=useBomb;$('#useSuperBattery').onclick=useSuperBattery;$('#openShop').onclick=openShop;$('#closeShop').onclick=closeShop;$('#closeToQuests').onclick=closeShop;$('#watchAd').onclick=watchRewardedAd;$('#shopOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#shopOverlay'))closeShop();});$('#emptyClose').onclick=closeEmptyConsumable;$('#emptyConsumableOverlay').addEventListener('pointerdown',e=>{if(e.target===$('#emptyConsumableOverlay'))closeEmptyConsumable();});$('#emptyWatchAd').onclick=()=>{closeEmptyConsumable();watchRewardedAd();};$('#emptyOpenShop').onclick=()=>{closeEmptyConsumable();openShop();};document.querySelectorAll('.buy-consumable').forEach(b=>b.onclick=()=>buyConsumable(b.dataset.item,Number(b.dataset.cost)));document.querySelectorAll('.buy-pack').forEach(b=>b.onclick=()=>buyCoinPack(b.dataset.pack));$('#claimGrandDailyReward').onclick=claimGrandDailyReward;
+[['autoBuyToggle','autoBuy'],['autoMergeToggle','autoMerge'],['autoClaimToggle','autoClaim'],['autoCleanToggle','autoClean']].forEach(([id,key])=>{$('#'+id).onclick=()=>{if(!autoUnlocked(key))return;if(!autoOwned(key)){buyAutomation(key);return;}state.automation[key]=!state.automation[key];autoNextRun={buy:0,merge:0,clean:0};save();updateUI();};});$('#mergePriority').onchange=e=>{if(state.cores<8||!autoOwned('autoMerge'))return;state.automation.mergePriority=e.target.value;save();updateUI();};$('#reservePct').onchange=e=>{if(state.cores<8||!autoOwned('autoBuy'))return;state.automation.reservePct=Number(e.target.value)||0;save();updateUI();};
+
+function isMobileLayout(){return window.matchMedia('(max-width:1024px)').matches}
+let mobileTab='factory';
+function setMobileTab(tab){
+  if(tab==='shop'){document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab==='shop'));openShop();return;}
+  if(!['factory','upgrades','automation','orders'].includes(tab))tab='factory';
+  mobileTab=tab;
+  document.body.dataset.mobileTab=tab;
+  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  if(isMobileLayout())window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateMobileBadge(){
+  const badge=$('#questBadge');
+  if(badge){
+    const ready=state.quests.filter(q=>q.ready).length + (state.dailyMissions||[]).filter(m=>!m.claimed&&dailyMissionProgress(m)>=m.target).length + ((state.dailyMissionMeta&&state.dailyMissionMeta.grandReady)?1:0);
+    badge.hidden=ready===0;
+    badge.textContent=ready>9?'9+':String(ready||'');
+  }
+  const upgradeBadge=$('#upgradeBadge');
+  if(upgradeBadge){
+    const affordable=['speed','supplier','market'].filter(k=>state.money>=upgradeCost(k)).length;
+    const coreAction=CORE_SKILLS.some(d=>skillRank(d.id)<d.max&&freeCores()>=coreSkillCost(d))?1:0;
+    const prestigeAction=state.totalEarned>=coreRequirement()?1:0;
+    const researchAction=RESEARCH_TIERS.some((t,i)=>(state.lifetime.maxLevel||state.maxLevel)>=t.level&&researchForTier(i)==null)?1:0;
+    const actions=affordable+coreAction+prestigeAction+researchAction;
+    upgradeBadge.hidden=actions===0;
+    upgradeBadge.textContent=actions>9?'9+':(actions?String(actions):'');
+  }
+}
+document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.addEventListener('click',()=>setMobileTab(b.dataset.tab)));
+
+window.addEventListener('resize',()=>{if(!isMobileLayout())document.body.removeAttribute('data-mobile-tab');else setMobileTab(mobileTab);});
+
+
+window.addEventListener('beforeunload',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
+loadPreferences();load();buildBoard();syncProductionServices();trackEvent('session_start',{maxLevel:state.lifetime.maxLevel||state.maxLevel,cores:state.cores,prestiges:state.lifetime.prestiges||0});ensureDailyMissions();syncEraVisual();renderAchievements();renderCoreSkills();setMobileTab('factory');updateMobileBadge();renderCollection();setTimeout(showDeferredOverlays,260);requestAnimationFrame(tick);setInterval(()=>{updateUI();updateMobileBadge();},350);setInterval(syncProductionServices,2500);
+})();
+</script>
+</body>
+</html>
+
