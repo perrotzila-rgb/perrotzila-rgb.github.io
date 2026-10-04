@@ -4,6 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Merge Factory</title>
+<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
+<script src="./web-ad-config.js"></script>
+<script src="./web-rewarded.js"></script>
 <script>try{const p=JSON.parse(localStorage.getItem('mergeFactoryPreferences')||'null');if(p&&p.theme==='night')document.documentElement.dataset.theme='night';}catch(e){}</script>
 <style>
 :root{--bg:#0d1117;--panel:#151b24;--panel2:#1d2632;--text:#f5f7fb;--muted:#a9b3c1;--accent:#65e6a6;--accent2:#7aa7ff;--danger:#ff6b7d;--gold:#ffd166;--cell:#242f3d;--cell2:#2d3b4d}
@@ -588,7 +591,7 @@ html[data-theme="night"] .rare-legend{background:#28221d;border-color:#453b32;co
 <script>
 (() => {
 const $=s=>document.querySelector(s), gridEl=$('#grid');
-const APP_VERSION='1.0.0-rc1';
+const APP_VERSION='1.0.0-web-rc2';
 const BUILD_MODE='production';
 const TELEMETRY_KEY='mergeFactoryTelemetry';
 const SAVE_KEY='mergeFactorySave';
@@ -599,8 +602,10 @@ function hasRewardedAds(){return !!((window.MergeFactoryAds&&typeof window.Merge
 function hasPayments(){return !!(window.MergeFactoryPayments&&typeof window.MergeFactoryPayments.purchase==='function')}
 function setServiceButton(id,available,unavailableText){const b=$('#'+id);if(!b)return;if(!b.dataset.readyHtml)b.dataset.readyHtml=b.innerHTML;b.disabled=!available;b.classList.toggle('service-disabled',!available);b.innerHTML=available?b.dataset.readyHtml:unavailableText;}
 function syncProductionServices(){const ads=hasRewardedAds(),payments=hasPayments();setServiceButton('watchAd',ads,'ANUNCIO NO DISPONIBLE');setServiceButton('emptyWatchAd',ads,'ANUNCIO NO DISPONIBLE');setServiceButton('claimOfflineAd',ads,'x2 NO DISPONIBLE');const packs=$('#coinPackSection');if(packs)packs.style.display=payments?'block':'none';const status=$('#productionStatus');if(status)status.textContent=`Anuncios: ${ads?'conectados':'no disponibles'} · Pagos: ${payments?'conectados':'ocultos'}`;}
-async function requestRewardedAd(placement){trackEvent('ad_reward_requested',{placement});try{const a=window.MergeFactoryAds;if(a&&typeof a.reward==='function'){const r=await a.reward({placement});const ok=r===true||!!(r&&r.rewarded===true);trackEvent(ok?'ad_reward_completed':'ad_reward_not_granted',{placement,provider:'bridge'});return ok;}}catch(e){trackEvent('ad_reward_error',{placement,provider:'bridge',message:String(e&&e.message||e)});return false;}if(typeof window.adBreak==='function'){return await new Promise(resolve=>{let settled=false;const finish=ok=>{if(settled)return;settled=true;clearTimeout(timer);trackEvent(ok?'ad_reward_completed':'ad_reward_not_granted',{placement,provider:'adBreak'});resolve(ok)};const timer=setTimeout(()=>finish(false),60000);try{window.adBreak({type:'reward',name:placement,beforeReward:showAdFn=>{try{showAdFn()}catch(e){finish(false)}},beforeAd:()=>{gamePaused=true},afterAd:()=>{gamePaused=false;state.last=Date.now()},adViewed:()=>finish(true),adDismissed:()=>finish(false),adBreakDone:()=>finish(false)});}catch(e){finish(false)}})}trackEvent('ad_reward_unavailable',{placement});return false;}
+async function requestRewardedAd(placement){trackEvent('ad_reward_requested',{placement});try{const a=window.MergeFactoryAds;if(a&&typeof a.reward==='function'){const r=await a.reward({placement});const ok=r===true||!!(r&&r.rewarded===true);trackEvent(ok?'ad_reward_completed':'ad_reward_not_granted',{placement,provider:(r&&r.provider)||'bridge',reason:r&&r.reason||''});return ok;}}catch(e){trackEvent('ad_reward_error',{placement,provider:'bridge',message:String(e&&e.message||e)});return false;}if(typeof window.adBreak==='function'){return await new Promise(resolve=>{let settled=false;const finish=ok=>{if(settled)return;settled=true;clearTimeout(timer);trackEvent(ok?'ad_reward_completed':'ad_reward_not_granted',{placement,provider:'adBreak'});resolve(ok)};const timer=setTimeout(()=>finish(false),60000);try{window.adBreak({type:'reward',name:placement,beforeReward:showAdFn=>{try{showAdFn()}catch(e){finish(false)}},beforeAd:()=>{gamePaused=true},afterAd:()=>{gamePaused=false;state.last=Date.now()},adViewed:()=>finish(true),adDismissed:()=>finish(false),adBreakDone:()=>finish(false)});}catch(e){finish(false)}})}trackEvent('ad_reward_unavailable',{placement});return false;}
 window.addEventListener('mergefactory:services-ready',syncProductionServices);
+window.addEventListener('mergefactory:ad-open',()=>{gamePaused=true;});
+window.addEventListener('mergefactory:ad-close',()=>{gamePaused=false;state.last=Date.now();});
 window.addEventListener('error',e=>trackEvent('runtime_error',{message:String(e.message||'error'),source:String(e.filename||''),line:e.lineno||0}));
 window.addEventListener('unhandledrejection',e=>trackEvent('promise_rejection',{message:String(e.reason&&e.reason.message||e.reason||'rejection')}));
 const MACHINE_DEFS=[
